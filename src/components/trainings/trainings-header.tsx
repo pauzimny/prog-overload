@@ -6,9 +6,12 @@ interface TrainingsHeaderProps {
   onCreateWorkout: () => void;
 }
 
-export default function TrainingsHeader({ onCopyUserId, onCreateWorkout }: TrainingsHeaderProps) {
+export default function TrainingsHeader({
+  onCopyUserId,
+  onCreateWorkout,
+}: TrainingsHeaderProps) {
   return (
-    <div className="mb-8 flex items-center justify-between">
+    <div className="mb-8 flex flex-col md:flex-row gap-2 items-center justify-between">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Your Workouts</h1>
         <p className="text-muted-foreground">

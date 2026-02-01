@@ -82,7 +82,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-20">
           <div className="mx-auto max-w-4xl">
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col md:flex-row gap-2 items-center justify-between mb-4">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight">
                     Welcome back, {user?.email?.split("@")[0]}!

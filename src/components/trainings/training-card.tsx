@@ -36,7 +36,7 @@ export default function TrainingCard({
   return (
     <Card key={training.id} className="overflow-hidden">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col-reverse md:flex-row gap-2 items-start justify-between w-full">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -67,7 +67,8 @@ export default function TrainingCard({
               </Badge>
               <Badge variant="outline">
                 {training.exercises.reduce(
-                  (total: number, exercise: any) => total + exercise.rounds.length,
+                  (total: number, exercise: any) =>
+                    total + exercise.rounds.length,
                   0,
                 )}{" "}
                 Total Sets
@@ -122,9 +123,9 @@ function TrainingActions({
   onDeleteTraining,
 }: TrainingActionsProps) {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col-reverse md:flex-row gap-2">
       {training.status === "plan" && (
-        <>
+        <div className="flex gap-2">
           <Button
             variant="default"
             size="sm"
@@ -143,24 +144,26 @@ function TrainingActions({
             <Check className="h-4 w-4 mr-2" />
             Set as Done
           </Button>
-        </>
+        </div>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onCopyTraining(training)}
-        title="Copy training summary to clipboard"
-      >
-        <Copy className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDeleteTraining(training.id)}
-        title="Delete this workout"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex gap-2 justify-end w-full">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onCopyTraining(training)}
+          title="Copy training summary to clipboard"
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDeleteTraining(training.id)}
+          title="Delete this workout"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -171,14 +174,19 @@ interface ExerciseItemProps {
   totalExercises: number;
 }
 
-function ExerciseItem({ exercise, exerciseIndex, totalExercises }: ExerciseItemProps) {
+function ExerciseItem({
+  exercise,
+  exerciseIndex,
+  totalExercises,
+}: ExerciseItemProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Dumbbell className="h-4 w-4 text-primary" />
         <h4 className="font-semibold">{exercise.name}</h4>
         <Badge variant="outline" className="text-xs">
-          {exercise.rounds.length} {exercise.rounds.length === 1 ? "Set" : "Sets"}
+          {exercise.rounds.length}{" "}
+          {exercise.rounds.length === 1 ? "Set" : "Sets"}
         </Badge>
       </div>
 
@@ -200,10 +208,16 @@ interface RoundItemProps {
 
 function RoundItem({ round, roundIndex }: RoundItemProps) {
   return (
-    <div key={round.id} className="flex items-center gap-4 text-sm">
+    <div
+      key={round.id}
+      className="flex items-center gap-4 text-sm grow w-full justify-between"
+    >
       <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-xs hidden md:block">
           Set {roundIndex + 1}
+        </Badge>
+        <Badge variant="secondary" className="text-xs md:hidden">
+          {roundIndex + 1}
         </Badge>
         <span className="font-medium">{round.weight} kg</span>
         <span className="text-muted-foreground">×</span>
