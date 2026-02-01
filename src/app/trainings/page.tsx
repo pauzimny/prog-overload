@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Circle,
   Play,
+  Check,
 } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
@@ -144,6 +145,14 @@ export default function TrainingsPage() {
   const completeWorkout = () => {
     setActiveWorkout(null);
     fetchTrainings(); // Refresh the list to show updated status
+  };
+
+  const setTrainingAsDone = (training: TrainingWithExercises) => {
+    if (
+      window.confirm("Are you sure you want to mark this training as done?")
+    ) {
+      toggleTrainingStatus(training.id, training.status);
+    }
   };
 
   if (loading) {
@@ -291,15 +300,26 @@ export default function TrainingsPage() {
                             </div>
                             <div className="flex gap-2">
                               {training.status === "plan" && (
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => startWorkout(training)}
-                                  title="Start this workout"
-                                >
-                                  <Play className="h-4 w-4 mr-2" />
-                                  Start Workout
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => startWorkout(training)}
+                                    title="Start this workout"
+                                  >
+                                    <Play className="h-4 w-4 mr-2" />
+                                    Start Workout
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setTrainingAsDone(training)}
+                                    title="Mark this training as done"
+                                  >
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Set as Done
+                                  </Button>
+                                </>
                               )}
                               <Button
                                 variant="ghost"
