@@ -12,10 +12,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Users, Dumbbell, Calendar, Activity, Shield } from "lucide-react";
+import {
+  Users,
+  Dumbbell,
+  Calendar,
+  Activity,
+  Shield,
+  Upload,
+  UserPlus,
+} from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { supabase } from "@/lib/supabase";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, getAllUsers } from "@/lib/admin";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AdminStats {
   totalUsers: number;
@@ -36,6 +54,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [uploadJson, setUploadJson] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -55,10 +77,108 @@ export default function AdminPage() {
       }
 
       fetchAdminStats();
+      fetchUsers();
     };
 
     checkAdminStatus();
   }, [user]);
+
+  const fetchUsers = async () => {
+    try {
+      const usersData = await getAllUsers();
+      setUsers(usersData);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    }
+  };
+
+  const uploadTraining = async () => {
+    if (!selectedUserId || !uploadJson) {
+      alert("Please select a user and provide JSON content");
+      return;
+    }
+
+    try {
+      const trainingData = JSON.parse(uploadJson);
+
+      let exercises = [];
+      let comments = "";
+
+      if (trainingData.training && trainingData.exercises) {
+        exercises = trainingData.exercises;
+        comments = trainingData.training.comments || "";
+      } else if (trainingData.exercises) {
+        exercises = trainingData.exercises;
+        comments = trainingData.comments || "";
+      } else {
+        throw new Error("Invalid format: exercises array not found");
+      }
+
+      const { error: trainingError } = await supabase.from("trainings").insert({
+        user_id: selectedUserId,
+        status: "plan",
+        comments: comments,
+        created_at: new Date().toISOString(),
+      });
+
+      if (trainingError) throw trainingError;
+
+      const { data: createdTraining } = await supabase
+        .from("trainings")
+        .select("id")
+        .eq("user_id", selectedUserId)
+        .eq("status", "plan")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!createdTraining)
+        throw new Error("Failed to retrieve created training");
+
+      for (const exercise of exercises) {
+        const { data: createdExercise, error: exerciseError } = await supabase
+          .from("exercises")
+          .insert({
+            training_id: createdTraining.id,
+            name: exercise.name,
+            created_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
+
+        if (exerciseError) throw exerciseError;
+
+        if (exercise.rounds && Array.isArray(exercise.rounds)) {
+          const roundsToInsert = exercise.rounds.map((round) => ({
+            exercise_id: createdExercise.id,
+            weight: round.weight || 0,
+            reps: round.reps || 0,
+            comments: round.comments || null,
+            created_at: new Date().toISOString(),
+          }));
+
+          const { error: roundsError } = await supabase
+            .from("rounds")
+            .insert(roundsToInsert);
+
+          if (roundsError) throw roundsError;
+        }
+      }
+
+      setUploadJson("");
+      setSelectedUserId("");
+      setIsUploadDialogOpen(false);
+
+      fetchAdminStats();
+
+      alert("Training uploaded successfully!");
+    } catch (error: any) {
+      console.error("Failed to upload training:", error);
+      alert(
+        `Failed to upload training: ${error?.message || "Please check the JSON format."}`,
+      );
+    }
+  };
 
   const fetchAdminStats = async () => {
     try {
@@ -277,6 +397,149 @@ export default function AdminPage() {
                         </Badge>
                       </div>
                     ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Users Table */}
+            <Card className="mt-8">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Users</CardTitle>
+                    <CardDescription>
+                      Manage users and upload training plans
+                    </CardDescription>
+                  </div>
+                  <Dialog
+                    open={isUploadDialogOpen}
+                    onOpenChange={setIsUploadDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Training
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Upload Training Plan</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="user-select">Select User</Label>
+                          <select
+                            id="user-select"
+                            className="w-full p-2 border rounded"
+                            value={selectedUserId}
+                            onChange={(e) => setSelectedUserId(e.target.value)}
+                          >
+                            <option value="">Choose a user...</option>
+                            {users.map((user) => (
+                              <option key={user.user_id} value={user.user_id}>
+                                {user.profiles?.email || "Unknown Email"} (
+                                {user.role})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label htmlFor="json-content">Training JSON</Label>
+                          <Textarea
+                            id="json-content"
+                            placeholder="Paste training JSON here..."
+                            value={uploadJson}
+                            onChange={(e) => setUploadJson(e.target.value)}
+                            rows={15}
+                            className="min-h-[300px] resize-y"
+                          />
+                        </div>
+                        <div className="flex gap-2 sticky bottom-0 bg-background py-2">
+                          <Button
+                            onClick={uploadTraining}
+                            disabled={!selectedUserId || !uploadJson}
+                          >
+                            Upload Training
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsUploadDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {users.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      No users found
+                    </p>
+                  ) : (
+                    <div className="border rounded-lg">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-3">User</th>
+                            <th className="text-left p-3">Role</th>
+                            <th className="text-left p-3">Created</th>
+                            <th className="text-left p-3">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.map((user) => (
+                            <tr key={user.user_id} className="border-b">
+                              <td className="p-3">
+                                <div>
+                                  <div className="font-medium">
+                                    {user.profiles?.email || "Unknown Email"}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    ID: {user.user_id.slice(0, 8)}...
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Badge
+                                  variant={
+                                    user.role === "admin"
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                >
+                                  {user.role}
+                                </Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="text-sm">
+                                  {new Date(
+                                    user.created_at,
+                                  ).toLocaleDateString()}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedUserId(user.user_id);
+                                    setIsUploadDialogOpen(true);
+                                  }}
+                                >
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Upload Training
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               </CardContent>
