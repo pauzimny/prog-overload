@@ -6,6 +6,8 @@ import {
   ExerciseUpdate,
   RoundInsert,
   RoundUpdate,
+  CreateExerciseForm,
+  CreateRoundForm,
   trainingInsertSchema,
   exerciseInsertSchema,
   roundInsertSchema,
@@ -176,7 +178,7 @@ export async function deleteRound(id: string): Promise<void> {
 // Bulk operations
 export async function createTrainingWithExercises(
   training: TrainingInsert,
-  exercises: (ExerciseInsert & { rounds: RoundInsert[] })[],
+  exercises: (CreateExerciseForm & { rounds: CreateRoundForm[] })[],
 ): Promise<TrainingWithExercises> {
   // Create training first
   const createdTraining = await createTraining(training);
@@ -185,7 +187,7 @@ export async function createTrainingWithExercises(
   const createdExercises = await Promise.all(
     exercises.map(async (exercise) => {
       const exerciseWithTrainingId = {
-        ...exercise,
+        name: exercise.name,
         training_id: createdTraining.id,
       };
       const createdExercise = await createExercise(exerciseWithTrainingId);
@@ -193,7 +195,12 @@ export async function createTrainingWithExercises(
       // Create rounds for this exercise
       const createdRounds = await Promise.all(
         exercise.rounds.map((round) =>
-          createRound({ ...round, exercise_id: createdExercise.id }),
+          createRound({
+            weight: round.weight,
+            reps: round.reps,
+            comments: round.comments || null,
+            exercise_id: createdExercise.id,
+          }),
         ),
       );
 

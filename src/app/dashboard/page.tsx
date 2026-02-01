@@ -11,9 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dumbbell, Plus } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
+import CreateTrainingForm from "@/components/create-training-form";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
 
   return (
     <ProtectedRoute>
@@ -61,7 +64,10 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full transition-colors">
+                  <Button
+                    className="w-full transition-colors"
+                    onClick={() => setIsCreateFormOpen(true)}
+                  >
                     Add Workout
                   </Button>
                 </CardContent>
@@ -70,6 +76,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <CreateTrainingForm
+        isOpen={isCreateFormOpen}
+        onClose={() => setIsCreateFormOpen(false)}
+      />
     </ProtectedRoute>
   );
 }
