@@ -49,9 +49,7 @@ export async function fetchAdminStats(): Promise<AdminStats> {
       recentTrainings?.map((training) => ({
         id: training.id,
         type:
-          training.status === "done"
-            ? "workout_completed"
-            : "workout_planned",
+          training.status === "done" ? "workout_completed" : "workout_planned",
         description: `User ${training.status === "done" ? "completed" : "planned"} a workout`,
         timestamp: training.created_at,
       })) || [];
@@ -69,7 +67,10 @@ export async function fetchAdminStats(): Promise<AdminStats> {
   }
 }
 
-export async function deleteTraining(trainingId: string, userId: string): Promise<void> {
+export async function deleteTraining(
+  trainingId: string,
+  userId: string,
+): Promise<void> {
   try {
     // Delete rounds first (due to foreign key constraints)
     const { data: exercises } = await supabase
@@ -100,7 +101,7 @@ export async function deleteTraining(trainingId: string, userId: string): Promis
 
 export async function uploadTraining(
   selectedUserId: string,
-  uploadJson: string
+  uploadJson: string,
 ): Promise<void> {
   try {
     const trainingData = JSON.parse(uploadJson);
@@ -182,12 +183,28 @@ export async function fetchUsersWithTrainings(): Promise<{
     const { getAllUsers } = await import("@/lib/admin");
     const usersData = await getAllUsers();
 
-    // Fetch trainings for each user
+    // Fetch trainings for each user with exercises and rounds
     const trainingsData: { [key: string]: any[] } = {};
     for (const user of usersData) {
       const { data } = await supabase
         .from("trainings")
-        .select("*")
+        .select(
+          `
+          *,
+          exercises (
+            id,
+            name,
+            created_at,
+            rounds (
+              id,
+              weight,
+              reps,
+              comments,
+              created_at
+            )
+          )
+        `,
+        )
         .eq("user_id", user.user_id)
         .order("created_at", { ascending: false });
       trainingsData[user.user_id] = data || [];
@@ -207,7 +224,23 @@ export async function refreshUserTrainings(userId: string): Promise<any[]> {
   try {
     const { data } = await supabase
       .from("trainings")
-      .select("*")
+      .select(
+        `
+        *,
+        exercises (
+          id,
+          name,
+          created_at,
+          rounds (
+            id,
+            weight,
+            reps,
+            comments,
+            created_at
+          )
+        )
+      `,
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 

@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { updateTrainingStatus } from "@/lib/database-operations";
+import { copyTrainingToClipboard } from "@/lib/training-utils";
 import type { TrainingWithExercises } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 
@@ -8,39 +9,12 @@ export function useTrainingOperations() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const copyTrainingToClipboard = (training: TrainingWithExercises) => {
-    const exercisesList = training.exercises
-      .map((exercise) => {
-        const roundsList = exercise.rounds
-          .map(
-            (round) =>
-              `${round.weight}kg × ${round.reps}${
-                round.comments ? ` (${round.comments})` : ""
-              }`,
-          )
-          .join(", ");
-        return `${exercise.name}: ${roundsList}`;
-      })
-      .join("\n");
-
-    const comment = training.comments
-      ? `\n\nDodatkowy komentarz: ${training.comments}`
-      : "";
-
-    const textToCopy = `Na ostatnim treningu zrobiono:\n${exercisesList}${comment}`;
-
-    navigator.clipboard
-      .writeText(textToCopy)
-      .then(() => {
-        toast({
-          message: "Training summary copied to clipboard!",
-          type: "success",
-        });
-      })
-      .catch((err) => {
-        console.error("Failed to copy training: ", err);
-        toast({ message: "Failed to copy training summary", type: "error" });
-      });
+  const handleCopyTraining = async (training: TrainingWithExercises) => {
+    const result = await copyTrainingToClipboard(training);
+    toast({
+      message: result.message,
+      type: result.success ? "success" : "error",
+    });
   };
 
   const copyUserIdToClipboard = () => {
@@ -137,7 +111,7 @@ export function useTrainingOperations() {
   };
 
   return {
-    copyTrainingToClipboard,
+    copyTrainingToClipboard: handleCopyTraining,
     copyUserIdToClipboard,
     toggleTrainingStatus,
     deleteTraining,

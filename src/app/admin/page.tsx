@@ -17,6 +17,7 @@ import AdminStatsComponent from "@/components/admin/admin-stats";
 import RecentActivity from "@/components/admin/recent-activity";
 import UploadTrainingDialog from "@/components/admin/upload-training-dialog";
 import UsersTable from "@/components/admin/users-table";
+import { AdminToastContainer } from "@/components/admin/admin-toast-container";
 import {
   Card,
   CardContent,
@@ -25,9 +26,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAdminToast } from "@/hooks/use-admin-toast";
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const { toasts, removeToast, toast } = useAdminToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -209,13 +212,29 @@ export default function AdminPage() {
           <div className="mx-auto max-w-6xl">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Shield className="h-8 w-8" />
-                Admin Dashboard
-              </h1>
-              <p className="text-muted-foreground">
-                Manage users and monitor platform activity
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                    <Shield className="h-8 w-8" />
+                    Admin Dashboard
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Manage users and monitor platform activity
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    toast({
+                      message: "Test toast notification!",
+                      type: "success",
+                    })
+                  }
+                >
+                  Test Toast
+                </Button>
+              </div>
             </div>
 
             {/* Stats Grid */}
@@ -266,6 +285,8 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      <AdminToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );
 }
