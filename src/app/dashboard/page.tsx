@@ -21,6 +21,7 @@ import {
   type TrainingWithExercises,
 } from "@/lib/database-operations";
 import { format } from "date-fns";
+import { isAdmin } from "@/lib/admin";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -52,6 +53,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchPlans();
+  }, [user]);
+
+  // Debug admin status - remove this later
+  useEffect(() => {
+    if (user) {
+      isAdmin(user.id).then((adminStatus) => {
+        console.log("User ID:", user.id);
+        console.log("Is Admin:", adminStatus);
+      });
+    }
   }, [user]);
 
   const copyUserIdToClipboard = () => {

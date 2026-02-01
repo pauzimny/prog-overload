@@ -1,23 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import AuthModal from "@/components/auth-modal";
+import { isAdmin } from "@/lib/admin";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const { user, signOut } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (user) {
+        const adminStatus = await isAdmin(user.id);
+        console.log("adminStatus", adminStatus);
+        setIsAdminUser(adminStatus);
+      } else {
+        setIsAdminUser(false);
+      }
+    };
+
+    checkAdmin();
+  }, [user]);
 
   const navItems = [
     { name: "Home", href: user ? "/dashboard" : "/" },
     { name: "About", href: "/about" },
     { name: "Services", href: "/services" },
     { name: "Contact", href: "/contact" },
+    ...(isAdminUser ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
   return (
