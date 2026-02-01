@@ -31,9 +31,9 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Home", href: user ? "/dashboard" : "/" },
-    { name: "About", href: "/about" },
-    { name: "Services", href: "/services" },
-    { name: "Contact", href: "/contact" },
+    // { name: "About", href: "/about" },
+    // { name: "Services", href: "/services" },
+    // { name: "Contact", href: "/contact" },
     ...(isAdminUser ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
@@ -44,7 +44,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="text-xl font-bold">
-              PWD App
+              Progressive Overload
             </a>
           </div>
 
