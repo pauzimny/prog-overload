@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dumbbell, Calendar, Clock, Trash2, Edit, Plus } from "lucide-react";
+import {
+  Dumbbell,
+  Calendar,
+  Clock,
+  Trash2,
+  Edit,
+  Plus,
+  Copy,
+} from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
 import {
@@ -52,6 +54,36 @@ export default function TrainingsPage() {
   const handleCreateSuccess = () => {
     setIsCreateFormOpen(false);
     fetchTrainings();
+  };
+
+  const copyTrainingToClipboard = (training: TrainingWithExercises) => {
+    const exercisesList = training.exercises
+      .map((exercise) => {
+        const roundsList = exercise.rounds
+          .map(
+            (round) =>
+              `${round.weight}kg × ${round.reps}${round.comments ? ` (${round.comments})` : ""}`,
+          )
+          .join(", ");
+        return `${exercise.name}: ${roundsList}`;
+      })
+      .join("\n");
+
+    const comment = training.comments
+      ? `\n\nDodatkowy komentarz: ${training.comments}`
+      : "";
+
+    const textToCopy = `Na ostatnim treningu zrobiono:\n${exercisesList}${comment}`;
+
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        // You could add a toast notification here
+        console.log("Training copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy training: ", err);
+      });
   };
 
   if (loading) {
@@ -155,6 +187,14 @@ export default function TrainingsPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyTrainingToClipboard(training)}
+                            title="Copy training summary to clipboard"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
