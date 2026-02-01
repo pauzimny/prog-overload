@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import {
   Card,
@@ -20,10 +20,12 @@ import {
   Shield,
   Upload,
   UserPlus,
+  Trash2,
 } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { supabase } from "@/lib/supabase";
 import { isAdmin, getAllUsers } from "@/lib/admin";
+import { Round } from "@/schemas/database";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,6 +60,10 @@ export default function AdminPage() {
   const [uploadJson, setUploadJson] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [userTrainings, setUserTrainings] = useState<{ [key: string]: any[] }>(
+    {},
+  );
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -87,8 +93,84 @@ export default function AdminPage() {
     try {
       const usersData = await getAllUsers();
       setUsers(usersData);
+
+      // Fetch trainings for each user
+      const trainingsData: { [key: string]: any[] } = {};
+      for (const user of usersData) {
+        const { data } = await supabase
+          .from("trainings")
+          .select("*")
+          .eq("user_id", user.user_id)
+          .order("created_at", { ascending: false });
+        trainingsData[user.user_id] = data || [];
+      }
+      setUserTrainings(trainingsData);
     } catch (err) {
       console.error("Failed to fetch users:", err);
+    }
+  };
+
+  const toggleUserExpanded = (userId: string) => {
+    const newExpanded = new Set(expandedUsers);
+    if (newExpanded.has(userId)) {
+      newExpanded.delete(userId);
+    } else {
+      newExpanded.add(userId);
+    }
+    setExpandedUsers(newExpanded);
+  };
+
+  const deleteTraining = async (trainingId: string, userId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this training? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // Delete rounds first (due to foreign key constraints)
+      const { data: exercises } = await supabase
+        .from("exercises")
+        .select("id")
+        .eq("training_id", trainingId);
+
+      if (exercises && exercises.length > 0) {
+        const exerciseIds = exercises.map((ex) => ex.id);
+        await supabase.from("rounds").delete().in("exercise_id", exerciseIds);
+      }
+
+      // Delete exercises
+      await supabase.from("exercises").delete().eq("training_id", trainingId);
+
+      // Delete training
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", trainingId);
+
+      if (error) throw error;
+
+      // Refresh trainings for this user
+      const { data } = await supabase
+        .from("trainings")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      setUserTrainings((prev) => ({
+        ...prev,
+        [userId]: data || [],
+      }));
+
+      // Refresh stats
+      fetchAdminStats();
+
+      alert("Training deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete training:", error);
+      alert("Failed to delete training. Please try again.");
     }
   };
 
@@ -149,7 +231,7 @@ export default function AdminPage() {
         if (exerciseError) throw exerciseError;
 
         if (exercise.rounds && Array.isArray(exercise.rounds)) {
-          const roundsToInsert = exercise.rounds.map((round) => ({
+          const roundsToInsert = exercise.rounds.map((round: Round) => ({
             exercise_id: createdExercise.id,
             weight: round.weight || 0,
             reps: round.reps || 0,
@@ -493,49 +575,140 @@ export default function AdminPage() {
                         </thead>
                         <tbody>
                           {users.map((user) => (
-                            <tr key={user.user_id} className="border-b">
-                              <td className="p-3">
-                                <div>
-                                  <div className="font-medium">
-                                    {user.profiles?.email || "Unknown Email"}
+                            <React.Fragment key={user.user_id}>
+                              <tr className="border-b">
+                                <td className="p-3">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        toggleUserExpanded(user.user_id)
+                                      }
+                                    >
+                                      {expandedUsers.has(user.user_id)
+                                        ? "▼"
+                                        : "▶"}
+                                    </Button>
+                                    <div>
+                                      <div className="font-medium">
+                                        {user.profiles?.email ||
+                                          "Unknown Email"}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">
+                                        ID: {user.user_id.slice(0, 8)}...
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    ID: {user.user_id.slice(0, 8)}...
+                                </td>
+                                <td className="p-3">
+                                  <Badge
+                                    variant={
+                                      user.role === "admin"
+                                        ? "default"
+                                        : "secondary"
+                                    }
+                                  >
+                                    {user.role}
+                                  </Badge>
+                                </td>
+                                <td className="p-3">
+                                  <div className="text-sm">
+                                    {new Date(
+                                      user.created_at,
+                                    ).toLocaleDateString()}
                                   </div>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <Badge
-                                  variant={
-                                    user.role === "admin"
-                                      ? "default"
-                                      : "secondary"
-                                  }
-                                >
-                                  {user.role}
-                                </Badge>
-                              </td>
-                              <td className="p-3">
-                                <div className="text-sm">
-                                  {new Date(
-                                    user.created_at,
-                                  ).toLocaleDateString()}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedUserId(user.user_id);
-                                    setIsUploadDialogOpen(true);
-                                  }}
-                                >
-                                  <Upload className="h-4 w-4 mr-2" />
-                                  Upload Training
-                                </Button>
-                              </td>
-                            </tr>
+                                </td>
+                                <td className="p-3">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUserId(user.user_id);
+                                        setIsUploadDialogOpen(true);
+                                      }}
+                                    >
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Upload Training
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                              {expandedUsers.has(user.user_id) && (
+                                <tr>
+                                  <td colSpan={4} className="p-0">
+                                    <div className="bg-muted/50 p-4 border-t">
+                                      <h4 className="font-medium mb-3">
+                                        User Trainings (
+                                        {userTrainings[user.user_id]?.length ||
+                                          0}
+                                        )
+                                      </h4>
+                                      {userTrainings[user.user_id]?.length ===
+                                      0 ? (
+                                        <p className="text-muted-foreground text-sm">
+                                          No trainings found
+                                        </p>
+                                      ) : (
+                                        <div className="space-y-2">
+                                          {userTrainings[user.user_id].map(
+                                            (training: any) => (
+                                              <div
+                                                key={training.id}
+                                                className="flex items-center justify-between bg-background p-3 rounded border"
+                                              >
+                                                <div className="flex-1">
+                                                  <div className="flex items-center gap-2">
+                                                    <Badge
+                                                      variant={
+                                                        training.status ===
+                                                        "done"
+                                                          ? "default"
+                                                          : "secondary"
+                                                      }
+                                                    >
+                                                      {training.status}
+                                                    </Badge>
+                                                    <span className="font-medium">
+                                                      {training.exercises
+                                                        ?.length || 0}{" "}
+                                                      exercises
+                                                    </span>
+                                                    <span className="text-sm text-muted-foreground">
+                                                      {new Date(
+                                                        training.created_at,
+                                                      ).toLocaleDateString()}
+                                                    </span>
+                                                  </div>
+                                                  {training.comments && (
+                                                    <p className="text-sm text-muted-foreground mt-1">
+                                                      {training.comments}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                                <Button
+                                                  size="sm"
+                                                  variant="destructive"
+                                                  onClick={() =>
+                                                    deleteTraining(
+                                                      training.id,
+                                                      user.user_id,
+                                                    )
+                                                  }
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            ),
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                           ))}
                         </tbody>
                       </table>

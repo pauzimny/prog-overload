@@ -27,6 +27,7 @@ import {
   updateTrainingStatus,
   type TrainingWithExercises,
 } from "@/lib/database-operations";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -152,6 +153,54 @@ export default function TrainingsPage() {
       window.confirm("Are you sure you want to mark this training as done?")
     ) {
       toggleTrainingStatus(training.id, training.status);
+    }
+  };
+
+  const deleteTraining = async (trainingId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this workout? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // Delete rounds first (due to foreign key constraints)
+      const { data: exercises } = await supabase
+        .from("exercises")
+        .select("id")
+        .eq("training_id", trainingId);
+
+      if (exercises && exercises.length > 0) {
+        const exerciseIds = exercises.map((ex) => ex.id);
+        await supabase.from("rounds").delete().in("exercise_id", exerciseIds);
+      }
+
+      // Delete exercises
+      await supabase.from("exercises").delete().eq("training_id", trainingId);
+
+      // Delete training
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", trainingId);
+
+      if (error) throw error;
+
+      // Refresh the list
+      fetchTrainings();
+
+      toast({
+        message: "Workout deleted successfully!",
+        type: "success",
+      });
+    } catch (err: any) {
+      console.error("Failed to delete workout: ", err);
+      toast({
+        message: "Failed to delete workout",
+        type: "error",
+      });
     }
   };
 
@@ -334,7 +383,12 @@ export default function TrainingsPage() {
                               <Button variant="ghost" size="sm">
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTraining(training.id)}
+                                title="Delete this workout"
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
