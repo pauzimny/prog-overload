@@ -13,10 +13,12 @@ import { Dumbbell, Plus } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <ProtectedRoute>
@@ -47,6 +49,7 @@ export default function Dashboard() {
                   <Button
                     variant="outline"
                     className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={() => router.push("/trainings")}
                   >
                     View Workouts
                   </Button>

@@ -45,6 +45,9 @@ type TrainingWithExercises = DatabaseTraining & {
   })[];
 };
 
+// Export the type for use in components
+export type { TrainingWithExercises };
+
 // Training operations
 export async function getUserTrainings(
   userId: string,
