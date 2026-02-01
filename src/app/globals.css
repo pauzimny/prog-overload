@@ -121,5 +121,61 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior: contain;
+    /* Smooth scrolling for mobile */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 768px) {
+    /* Prevent zoom on input focus on iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    textarea,
+    select {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    /* Better touch targets */
+    button,
+    .btn {
+      min-height: 44px; /* iOS touch target size */
+      min-width: 44px;
+    }
+
+    /* Better spacing on mobile */
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  /* Hide scrollbar on mobile for cleaner look */
+  @media (max-width: 640px) {
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+/* Mobile-friendly button styles */
+@layer components {
+  .btn-mobile {
+    @apply min-h-[44px] min-w-[44px] text-base;
+  }
+
+  /* Touch-friendly hover states */
+  @media (hover: none) and (pointer: coarse) {
+    .btn-mobile:hover {
+      @apply bg-primary text-primary-foreground;
+    }
+  }
+
+  /* Better focus states for mobile */
+  .btn-mobile:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2;
   }
 }
