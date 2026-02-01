@@ -14,11 +14,14 @@ import {
   Edit,
   Plus,
   Copy,
+  CheckCircle,
+  Circle,
 } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
 import {
   getUserTrainings,
+  updateTrainingStatus,
   type TrainingWithExercises,
 } from "@/lib/database-operations";
 import { useRouter } from "next/navigation";
@@ -105,6 +108,28 @@ export default function TrainingsPage() {
           console.error("Failed to copy user ID: ", err);
           toast({ message: "Failed to copy User ID", type: "error" });
         });
+    }
+  };
+
+  const toggleTrainingStatus = async (
+    trainingId: string,
+    currentStatus: "plan" | "done",
+  ) => {
+    const newStatus = currentStatus === "plan" ? "done" : "plan";
+
+    try {
+      await updateTrainingStatus(trainingId, newStatus);
+      fetchTrainings(); // Refresh the list
+      toast({
+        message: `Training marked as ${newStatus}!`,
+        type: "success",
+      });
+    } catch (err: any) {
+      console.error("Failed to update training status: ", err);
+      toast({
+        message: "Failed to update training status",
+        type: "error",
+      });
     }
   };
 
@@ -203,6 +228,27 @@ export default function TrainingsPage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                training.status === "done"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="cursor-pointer"
+                              onClick={() =>
+                                toggleTrainingStatus(
+                                  training.id,
+                                  training.status,
+                                )
+                              }
+                            >
+                              {training.status === "done" ? (
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                              ) : (
+                                <Circle className="h-3 w-3 mr-1" />
+                              )}
+                              {training.status === "done" ? "Done" : "Plan"}
+                            </Badge>
                             <Badge variant="secondary">
                               {training.exercises.length}{" "}
                               {training.exercises.length === 1

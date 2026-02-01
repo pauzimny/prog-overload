@@ -17,6 +17,7 @@ import {
 type DatabaseTraining = {
   id: string;
   user_id: string;
+  status: "plan" | "done";
   comments: string | null;
   created_at: string;
   updated_at: string;
@@ -92,6 +93,21 @@ export async function updateTraining(
   const { data, error } = await supabase
     .from("trainings")
     .update(training as any)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DatabaseTraining;
+}
+
+export async function updateTrainingStatus(
+  id: string,
+  status: "plan" | "done",
+): Promise<DatabaseTraining> {
+  const { data, error } = await supabase
+    .from("trainings")
+    .update({ status })
     .eq("id", id)
     .select()
     .single();
