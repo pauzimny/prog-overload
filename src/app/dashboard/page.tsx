@@ -9,19 +9,50 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Plus, Copy } from "lucide-react";
+import { Dumbbell, Plus, Copy, Calendar } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { ToastContainer } from "@/components/ui/toast";
+import {
+  getUserTrainings,
+  type TrainingWithExercises,
+} from "@/lib/database-operations";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [plans, setPlans] = useState<TrainingWithExercises[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   const router = useRouter();
   const { toasts, toast, removeToast } = useToast();
+
+  const fetchPlans = async () => {
+    if (!user) return;
+
+    try {
+      setPlansLoading(true);
+      const allTrainings = await getUserTrainings(user.id);
+      const planTrainings = allTrainings
+        .filter((training) => training.status === "plan")
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+      setPlans(planTrainings);
+    } catch (err: any) {
+      console.error("Failed to fetch plans:", err);
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, [user]);
 
   const copyUserIdToClipboard = () => {
     if (user?.id) {
@@ -64,7 +95,54 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
+              {/* Plans Card */}
+              <Card className="group cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    Plans
+                  </CardTitle>
+                  <CardDescription>Your upcoming workout plans</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {plansLoading ? (
+                    <div className="text-sm text-muted-foreground">
+                      Loading plans...
+                    </div>
+                  ) : plans.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">
+                      No plans yet
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {plans.slice(0, 3).map((plan) => (
+                        <div key={plan.id} className="text-sm">
+                          <div className="font-medium">
+                            {plan.exercises[0]?.name || "Untitled Plan"}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {format(new Date(plan.created_at), "MMM d")}
+                          </div>
+                        </div>
+                      ))}
+                      {plans.length > 3 && (
+                        <div className="text-xs text-muted-foreground">
+                          +{plans.length - 3} more plans
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full mt-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={() => router.push("/trainings")}
+                  >
+                    View All Plans
+                  </Button>
+                </CardContent>
+              </Card>
+
               <Card className="group cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -112,7 +190,10 @@ export default function Dashboard() {
 
       <CreateTrainingForm
         isOpen={isCreateFormOpen}
-        onClose={() => setIsCreateFormOpen(false)}
+        onClose={() => {
+          setIsCreateFormOpen(false);
+          fetchPlans(); // Refresh plans after creating a new training
+        }}
       />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
