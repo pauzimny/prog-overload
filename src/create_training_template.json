@@ -1,0 +1,43 @@
+{
+  "training": {
+    "user_id": "uuid-string-here",
+    "comments": "Optional training comments here"
+  },
+  "exercises": [
+    {
+      "name": "Bench Press",
+      "rounds": [
+        {
+          "weight": 80,
+          "reps": 10,
+          "comments": "Good form"
+        },
+        {
+          "weight": 80,
+          "reps": 8,
+          "comments": null
+        }
+      ]
+    },
+    {
+      "name": "Squat",
+      "rounds": [
+        {
+          "weight": 100,
+          "reps": 8,
+          "comments": "Deep squat"
+        },
+        {
+          "weight": 100,
+          "reps": 8,
+          "comments": null
+        },
+        {
+          "weight": 95,
+          "reps": 6,
+          "comments": "Last set"
+        }
+      ]
+    }
+  ]
+}

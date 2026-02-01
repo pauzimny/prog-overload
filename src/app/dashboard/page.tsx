@@ -9,16 +9,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Plus } from "lucide-react";
+import { Dumbbell, Plus, Copy } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { ToastContainer } from "@/components/ui/toast";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const router = useRouter();
+  const { toasts, toast, removeToast } = useToast();
+
+  const copyUserIdToClipboard = () => {
+    if (user?.id) {
+      navigator.clipboard
+        .writeText(user.id)
+        .then(() => {
+          toast({ message: "User ID copied to clipboard!", type: "success" });
+        })
+        .catch((err) => {
+          console.error("Failed to copy user ID: ", err);
+          toast({ message: "Failed to copy User ID", type: "error" });
+        });
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -26,12 +43,25 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-20">
           <div className="mx-auto max-w-4xl">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Welcome back, {user?.email?.split("@")[0]}!
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your workouts and track your fitness journey
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    Welcome back, {user?.email?.split("@")[0]}!
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Manage your workouts and track your fitness journey
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyUserIdToClipboard}
+                  title="Copy your User ID to clipboard"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy User ID
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -84,6 +114,7 @@ export default function Dashboard() {
         isOpen={isCreateFormOpen}
         onClose={() => setIsCreateFormOpen(false)}
       />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );
 }

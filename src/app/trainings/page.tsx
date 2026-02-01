@@ -23,6 +23,8 @@ import {
 } from "@/lib/database-operations";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { ToastContainer } from "@/components/ui/toast";
 
 export default function TrainingsPage() {
   const { user } = useAuth();
@@ -31,6 +33,7 @@ export default function TrainingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const { toasts, toast, removeToast } = useToast();
 
   const fetchTrainings = async () => {
     if (!user) return;
@@ -62,7 +65,9 @@ export default function TrainingsPage() {
         const roundsList = exercise.rounds
           .map(
             (round) =>
-              `${round.weight}kg × ${round.reps}${round.comments ? ` (${round.comments})` : ""}`,
+              `${round.weight}kg × ${round.reps}${
+                round.comments ? ` (${round.comments})` : ""
+              }`,
           )
           .join(", ");
         return `${exercise.name}: ${roundsList}`;
@@ -78,12 +83,29 @@ export default function TrainingsPage() {
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
-        // You could add a toast notification here
-        console.log("Training copied to clipboard!");
+        toast({
+          message: "Training summary copied to clipboard!",
+          type: "success",
+        });
       })
       .catch((err) => {
         console.error("Failed to copy training: ", err);
+        toast({ message: "Failed to copy training summary", type: "error" });
       });
+  };
+
+  const copyUserIdToClipboard = () => {
+    if (user?.id) {
+      navigator.clipboard
+        .writeText(user.id)
+        .then(() => {
+          toast({ message: "User ID copied to clipboard!", type: "success" });
+        })
+        .catch((err) => {
+          console.error("Failed to copy user ID: ", err);
+          toast({ message: "Failed to copy User ID", type: "error" });
+        });
+    }
   };
 
   if (loading) {
@@ -120,10 +142,21 @@ export default function TrainingsPage() {
                   Track and manage all your training sessions
                 </p>
               </div>
-              <Button onClick={() => setIsCreateFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Workout
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyUserIdToClipboard}
+                  title="Copy your User ID to clipboard"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy User ID
+                </Button>
+                <Button onClick={() => setIsCreateFormOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Workout
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -279,6 +312,7 @@ export default function TrainingsPage() {
         isOpen={isCreateFormOpen}
         onClose={() => setIsCreateFormOpen(false)}
       />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );
 }
