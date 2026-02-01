@@ -10,8 +10,6 @@ export async function isAdmin(userId: string): Promise<boolean> {
       .eq("role", "admin")
       .single();
 
-    console.log("Admin check result:", { data, error, userId });
-
     if (error) {
       console.error("Admin check error:", error);
       return false;

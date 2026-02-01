@@ -58,10 +58,7 @@ export default function Dashboard() {
   // Debug admin status - remove this later
   useEffect(() => {
     if (user) {
-      isAdmin(user.id).then((adminStatus) => {
-        console.log("User ID:", user.id);
-        console.log("Is Admin:", adminStatus);
-      });
+      isAdmin(user.id);
     }
   }, [user]);
 

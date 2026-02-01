@@ -2,47 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Dumbbell,
-  Calendar,
-  Clock,
-  Trash2,
-  Edit,
-  Plus,
-  Copy,
-  CheckCircle,
-  Circle,
-  Play,
-  Check,
-} from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
 import WorkoutTimer from "@/components/workout-timer";
+import TrainingCard from "@/components/trainings/training-card";
+import EmptyState from "@/components/trainings/empty-state";
+import TrainingsHeader from "@/components/trainings/trainings-header";
+import { useTrainingOperations } from "@/hooks/use-training-operations";
 import {
   getUserTrainings,
-  updateTrainingStatus,
   type TrainingWithExercises,
 } from "@/lib/database-operations";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
-import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { ToastContainer } from "@/components/ui/toast";
 
 export default function TrainingsPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [trainings, setTrainings] = useState<TrainingWithExercises[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [activeWorkout, setActiveWorkout] =
     useState<TrainingWithExercises | null>(null);
-  const { toasts, toast, removeToast } = useToast();
+  const { toasts, removeToast } = useToast();
+  const {
+    copyTrainingToClipboard,
+    copyUserIdToClipboard,
+    toggleTrainingStatus,
+    deleteTraining,
+    setTrainingAsDone,
+  } = useTrainingOperations();
 
   const fetchTrainings = async () => {
     if (!user) return;
@@ -68,77 +57,6 @@ export default function TrainingsPage() {
     fetchTrainings();
   };
 
-  const copyTrainingToClipboard = (training: TrainingWithExercises) => {
-    const exercisesList = training.exercises
-      .map((exercise) => {
-        const roundsList = exercise.rounds
-          .map(
-            (round) =>
-              `${round.weight}kg × ${round.reps}${
-                round.comments ? ` (${round.comments})` : ""
-              }`,
-          )
-          .join(", ");
-        return `${exercise.name}: ${roundsList}`;
-      })
-      .join("\n");
-
-    const comment = training.comments
-      ? `\n\nDodatkowy komentarz: ${training.comments}`
-      : "";
-
-    const textToCopy = `Na ostatnim treningu zrobiono:\n${exercisesList}${comment}`;
-
-    navigator.clipboard
-      .writeText(textToCopy)
-      .then(() => {
-        toast({
-          message: "Training summary copied to clipboard!",
-          type: "success",
-        });
-      })
-      .catch((err) => {
-        console.error("Failed to copy training: ", err);
-        toast({ message: "Failed to copy training summary", type: "error" });
-      });
-  };
-
-  const copyUserIdToClipboard = () => {
-    if (user?.id) {
-      navigator.clipboard
-        .writeText(user.id)
-        .then(() => {
-          toast({ message: "User ID copied to clipboard!", type: "success" });
-        })
-        .catch((err) => {
-          console.error("Failed to copy user ID: ", err);
-          toast({ message: "Failed to copy User ID", type: "error" });
-        });
-    }
-  };
-
-  const toggleTrainingStatus = async (
-    trainingId: string,
-    currentStatus: "plan" | "done",
-  ) => {
-    const newStatus = currentStatus === "plan" ? "done" : "plan";
-
-    try {
-      await updateTrainingStatus(trainingId, newStatus);
-      fetchTrainings(); // Refresh the list
-      toast({
-        message: `Training marked as ${newStatus}!`,
-        type: "success",
-      });
-    } catch (err: any) {
-      console.error("Failed to update training status: ", err);
-      toast({
-        message: "Failed to update training status",
-        type: "error",
-      });
-    }
-  };
-
   const startWorkout = (training: TrainingWithExercises) => {
     setActiveWorkout(training);
   };
@@ -148,59 +66,27 @@ export default function TrainingsPage() {
     fetchTrainings(); // Refresh the list to show updated status
   };
 
-  const setTrainingAsDone = (training: TrainingWithExercises) => {
-    if (
-      window.confirm("Are you sure you want to mark this training as done?")
-    ) {
-      toggleTrainingStatus(training.id, training.status);
+  const handleToggleStatus = async (
+    trainingId: string,
+    currentStatus: "plan" | "done",
+  ) => {
+    const success = await toggleTrainingStatus(trainingId, currentStatus);
+    if (success) {
+      fetchTrainings(); // Refresh the list
     }
   };
 
-  const deleteTraining = async (trainingId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this workout? This action cannot be undone.",
-      )
-    ) {
-      return;
+  const handleDeleteTraining = async (trainingId: string) => {
+    const success = await deleteTraining(trainingId);
+    if (success) {
+      fetchTrainings(); // Refresh the list
     }
+  };
 
-    try {
-      // Delete rounds first (due to foreign key constraints)
-      const { data: exercises } = await supabase
-        .from("exercises")
-        .select("id")
-        .eq("training_id", trainingId);
-
-      if (exercises && exercises.length > 0) {
-        const exerciseIds = exercises.map((ex) => ex.id);
-        await supabase.from("rounds").delete().in("exercise_id", exerciseIds);
-      }
-
-      // Delete exercises
-      await supabase.from("exercises").delete().eq("training_id", trainingId);
-
-      // Delete training
-      const { error } = await supabase
-        .from("trainings")
-        .delete()
-        .eq("id", trainingId);
-
-      if (error) throw error;
-
-      // Refresh the list
-      fetchTrainings();
-
-      toast({
-        message: "Workout deleted successfully!",
-        type: "success",
-      });
-    } catch (err: any) {
-      console.error("Failed to delete workout: ", err);
-      toast({
-        message: "Failed to delete workout",
-        type: "error",
-      });
+  const handleSetAsDone = async (training: TrainingWithExercises) => {
+    const success = await setTrainingAsDone(training);
+    if (success) {
+      fetchTrainings(); // Refresh the list
     }
   };
 
@@ -237,31 +123,10 @@ export default function TrainingsPage() {
             ) : (
               <>
                 {/* Header */}
-                <div className="mb-8 flex items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                      Your Workouts
-                    </h1>
-                    <p className="text-muted-foreground">
-                      Track and manage all your training sessions
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyUserIdToClipboard}
-                      title="Copy your User ID to clipboard"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy User ID
-                    </Button>
-                    <Button onClick={() => setIsCreateFormOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Workout
-                    </Button>
-                  </div>
-                </div>
+                <TrainingsHeader
+                  onCopyUserId={copyUserIdToClipboard}
+                  onCreateWorkout={() => setIsCreateFormOpen(true)}
+                />
 
                 {error && (
                   <div className="mb-6 text-sm text-destructive bg-destructive/10 p-3 rounded">
@@ -270,199 +135,21 @@ export default function TrainingsPage() {
                 )}
 
                 {trainings.length === 0 ? (
-                  <Card className="text-center py-12">
-                    <CardContent>
-                      <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        No workouts yet
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        Start tracking your fitness journey by creating your
-                        first workout
-                      </p>
-                      <Button onClick={() => setIsCreateFormOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Your First Workout
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <EmptyState
+                    onCreateWorkout={() => setIsCreateFormOpen(true)}
+                  />
                 ) : (
                   <div className="space-y-6">
                     {trainings.map((training) => (
-                      <Card key={training.id} className="overflow-hidden">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">
-                                  {format(
-                                    new Date(training.created_at),
-                                    "MMMM d, yyyy",
-                                  )}
-                                </span>
-                                <Clock className="h-4 w-4 text-muted-foreground ml-2" />
-                                <span className="text-sm text-muted-foreground">
-                                  {format(
-                                    new Date(training.created_at),
-                                    "h:mm a",
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant={
-                                    training.status === "done"
-                                      ? "default"
-                                      : "secondary"
-                                  }
-                                  className="cursor-pointer"
-                                  onClick={() =>
-                                    toggleTrainingStatus(
-                                      training.id,
-                                      training.status,
-                                    )
-                                  }
-                                >
-                                  {training.status === "done" ? (
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                  ) : (
-                                    <Circle className="h-3 w-3 mr-1" />
-                                  )}
-                                  {training.status === "done" ? "Done" : "Plan"}
-                                </Badge>
-                                <Badge variant="secondary">
-                                  {training.exercises.length}{" "}
-                                  {training.exercises.length === 1
-                                    ? "Exercise"
-                                    : "Exercises"}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {training.exercises.reduce(
-                                    (total: number, exercise: any) =>
-                                      total + exercise.rounds.length,
-                                    0,
-                                  )}{" "}
-                                  Total Sets
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              {training.status === "plan" && (
-                                <>
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => startWorkout(training)}
-                                    title="Start this workout"
-                                  >
-                                    <Play className="h-4 w-4 mr-2" />
-                                    Start Workout
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setTrainingAsDone(training)}
-                                    title="Mark this training as done"
-                                  >
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Set as Done
-                                  </Button>
-                                </>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  copyTrainingToClipboard(training)
-                                }
-                                title="Copy training summary to clipboard"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteTraining(training.id)}
-                                title="Delete this workout"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-
-                        {training.comments && (
-                          <div className="px-6 pb-2">
-                            <p className="text-sm text-muted-foreground italic">
-                              "{training.comments}"
-                            </p>
-                          </div>
-                        )}
-
-                        <CardContent className="space-y-4">
-                          {training.exercises.map(
-                            (exercise: any, exerciseIndex: number) => (
-                              <div key={exercise.id} className="space-y-3">
-                                <div className="flex items-center gap-2">
-                                  <Dumbbell className="h-4 w-4 text-primary" />
-                                  <h4 className="font-semibold">
-                                    {exercise.name}
-                                  </h4>
-                                  <Badge variant="outline" className="text-xs">
-                                    {exercise.rounds.length}{" "}
-                                    {exercise.rounds.length === 1
-                                      ? "Set"
-                                      : "Sets"}
-                                  </Badge>
-                                </div>
-
-                                <div className="ml-6 space-y-2">
-                                  {exercise.rounds.map(
-                                    (round: any, roundIndex: number) => (
-                                      <div
-                                        key={round.id}
-                                        className="flex items-center gap-4 text-sm"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <Badge
-                                            variant="secondary"
-                                            className="text-xs"
-                                          >
-                                            Set {roundIndex + 1}
-                                          </Badge>
-                                          <span className="font-medium">
-                                            {round.weight} kg
-                                          </span>
-                                          <span className="text-muted-foreground">
-                                            ×
-                                          </span>
-                                          <span className="font-medium">
-                                            {round.reps} reps
-                                          </span>
-                                        </div>
-                                        {round.comments && (
-                                          <span className="text-muted-foreground italic">
-                                            ({round.comments})
-                                          </span>
-                                        )}
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-
-                                {exerciseIndex <
-                                  training.exercises.length - 1 && (
-                                  <Separator className="ml-6" />
-                                )}
-                              </div>
-                            ),
-                          )}
-                        </CardContent>
-                      </Card>
+                      <TrainingCard
+                        key={training.id}
+                        training={training}
+                        onStartWorkout={startWorkout}
+                        onSetAsDone={handleSetAsDone}
+                        onCopyTraining={copyTrainingToClipboard}
+                        onDeleteTraining={handleDeleteTraining}
+                        onToggleStatus={handleToggleStatus}
+                      />
                     ))}
                   </div>
                 )}

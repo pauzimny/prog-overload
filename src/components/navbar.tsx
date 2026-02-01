@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, Shield } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import AuthModal from "@/components/auth-modal";
 import { isAdmin } from "@/lib/admin";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const { user, signOut } = useAuth();
 
@@ -19,7 +18,6 @@ export default function Navbar() {
     const checkAdmin = async () => {
       if (user) {
         const adminStatus = await isAdmin(user.id);
-        console.log("adminStatus", adminStatus);
         setIsAdminUser(adminStatus);
       } else {
         setIsAdminUser(false);
@@ -70,12 +68,8 @@ export default function Navbar() {
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAuthModalOpen(true)}
-              >
-                Sign In
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/auth">Sign In</Link>
               </Button>
             )}
           </div>
@@ -127,25 +121,13 @@ export default function Navbar() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    setIsAuthModalOpen(true);
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Sign In
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <Link href="/auth">Sign In</Link>
                 </Button>
               )}
             </div>
           </div>
         )}
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-        />
       </div>
     </nav>
   );

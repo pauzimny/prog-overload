@@ -9,17 +9,12 @@ import {
   Users,
   Calendar,
   ArrowRight,
-  CheckCircle,
   BarChart3,
   Activity,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import AuthModal from "@/components/auth-modal";
-
 export default function Home() {
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
 
   if (user) {
     // Redirect logged-in users to dashboard
@@ -60,13 +55,11 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6"
-                onClick={() => setIsOpen(true)}
-              >
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="text-lg px-8 py-6" asChild>
+                <Link href="/auth">
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
               <Button
                 variant="outline"
@@ -187,15 +180,15 @@ export default function Home() {
             size="lg"
             variant="secondary"
             className="text-lg px-8 py-6 bg-background text-foreground hover:bg-background/90 transition-colors"
-            onClick={() => setIsOpen(true)}
+            asChild
           >
-            Start Your Free Trial
-            <ArrowRight className="ml-2 h-5 w-5" />
+            <Link href="/auth">
+              Start Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
         </div>
       </section>
-
-      <AuthModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
   );
 }
