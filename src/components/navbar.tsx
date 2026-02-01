@@ -14,7 +14,7 @@ export default function Navbar() {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const navItems = [
-    { name: "Home", href: "/" },
+    { name: "Home", href: user ? "/dashboard" : "/" },
     { name: "About", href: "/about" },
     { name: "Services", href: "/services" },
     { name: "Contact", href: "/contact" },

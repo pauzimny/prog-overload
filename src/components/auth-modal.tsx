@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +39,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       if (error) throw error;
 
+      // Redirect to dashboard after successful sign in
+      router.push("/dashboard");
       onClose();
       setEmail("");
       setPassword("");
