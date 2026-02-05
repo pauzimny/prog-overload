@@ -128,6 +128,7 @@ export default function AuthPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
+                      className="h-12"
                     />
                   </div>
 
@@ -142,6 +143,7 @@ export default function AuthPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={loading}
+                        className="h-12"
                       />
                       <Button
                         type="button"
@@ -184,6 +186,7 @@ export default function AuthPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading}
+                      className="h-12"
                     />
                   </div>
 
@@ -193,12 +196,13 @@ export default function AuthPage() {
                       <Input
                         id="signup-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Create a password (min. 6 characters)"
+                        placeholder="Password (min. 6 characters)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={loading}
                         minLength={6}
+                        className="h-12"
                       />
                       <Button
                         type="button"

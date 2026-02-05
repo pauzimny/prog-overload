@@ -12,7 +12,7 @@ export default function TrainingsHeader({
 }: TrainingsHeaderProps) {
   return (
     <div className="mb-8 flex flex-col md:flex-row gap-2 items-center justify-between">
-      <div>
+      <div className="flex flex-col items-center gap-1 pb-2">
         <h1 className="text-3xl font-bold tracking-tight">Your Workouts</h1>
         <p className="text-muted-foreground">
           Track and manage all your training sessions
