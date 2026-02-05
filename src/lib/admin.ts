@@ -38,27 +38,15 @@ export async function setUserRole(
 
 export async function getAllUsers() {
   try {
-    // Get all user roles - should work with new RLS policies
-    const { data: userRoles, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("user_id, role, created_at");
+    // Call the API route to get users with emails
+    const response = await fetch("/api/admin/users");
 
-    if (rolesError) {
-      console.error("Failed to fetch user roles:", rolesError);
+    if (!response.ok) {
+      console.error("Failed to fetch users:", response.statusText);
       return [];
     }
 
-    // Transform data for the table - we'll show user ID as identifier since email access is restricted
-    const users = userRoles.map((userRole) => ({
-      user_id: userRole.user_id,
-      role: userRole.role,
-      created_at: userRole.created_at,
-      profiles: {
-        email: `User ${userRole.user_id.slice(0, 8)}...`, // Show partial user ID as identifier
-        created_at: userRole.created_at,
-      },
-    }));
-
+    const users = await response.json();
     return users;
   } catch (error) {
     console.error("Failed to fetch users:", error);
