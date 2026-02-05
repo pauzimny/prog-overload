@@ -32,7 +32,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 py-20 lg:py-32">
+        <div className="container mx-auto px-4 pb-20 pt-4 lg:py-32">
           <div className="text-center">
             <div className="flex justify-center mb-8">
               <div className="relative">

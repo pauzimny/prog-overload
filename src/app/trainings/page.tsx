@@ -93,8 +93,8 @@ export default function TrainingsPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-          <div className="container mx-auto px-4 py-20">
+        <div className="min-h-screen bg-linear-gradient-to-br from-background to-muted/20">
+          <div className="container mx-auto px-3 py-20">
             <div className="flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -112,7 +112,7 @@ export default function TrainingsPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        <div className="container mx-auto px-4 py-20">
+        <div className="container mx-auto px-4 pb-20 pt-4 py-20">
           <div className="mx-auto max-w-6xl">
             {/* Show Workout Timer when active */}
             {activeWorkout ? (

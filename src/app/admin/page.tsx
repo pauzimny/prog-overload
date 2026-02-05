@@ -172,7 +172,7 @@ export default function AdminPage() {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-          <div className="container mx-auto px-4 py-20">
+          <div className="container mx-auto px-4 pb-20 pt-4 py-20">
             <div className="flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -191,7 +191,7 @@ export default function AdminPage() {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-          <div className="container mx-auto px-4 py-20">
+          <div className="container mx-auto px-4 pb-20 pt-4 py-20">
             <div className="text-center">
               <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
@@ -208,7 +208,7 @@ export default function AdminPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        <div className="container mx-auto px-4 py-20">
+        <div className="container mx-auto px-4 pb-20 pt-4 py-20">
           <div className="mx-auto max-w-6xl">
             {/* Header */}
             <div className="mb-8">

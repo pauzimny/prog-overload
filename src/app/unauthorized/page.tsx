@@ -1,16 +1,22 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Unauthorized() {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 pb-20 pt-4 py-20">
         <div className="mx-auto max-w-md">
           <Card className="text-center">
             <CardHeader>
@@ -19,17 +25,15 @@ export default function Unauthorized() {
               </div>
               <CardTitle>Authentication Required</CardTitle>
               <CardDescription>
-                You need to sign in to access this content. Please sign in to continue.
+                You need to sign in to access this content. Please sign in to
+                continue.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                onClick={() => router.push("/")}
-                className="w-full"
-              >
+              <Button onClick={() => router.push("/")} className="w-full">
                 Go to Sign In
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => router.back()}
                 className="w-full"
@@ -41,5 +45,5 @@ export default function Unauthorized() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -79,7 +79,7 @@ export default function Dashboard() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        <div className="container mx-auto px-4 py-20">
+        <div className="container mx-auto px-4 pb-20 pt-4 py-20">
           <div className="mx-auto max-w-4xl">
             <div className="mb-8">
               <div className="flex flex-col md:flex-row gap-2 items-center justify-between mb-4">
@@ -142,7 +142,6 @@ export default function Dashboard() {
                     </div>
                   )}
                   <Button
-                    variant="outline"
                     className="w-full mt-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     onClick={() => router.push("/trainings")}
                   >
@@ -163,7 +162,6 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button
-                    variant="outline"
                     className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     onClick={() => router.push("/trainings")}
                   >
@@ -184,6 +182,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button
+                    variant="outline"
                     className="w-full transition-colors"
                     onClick={() => setIsCreateFormOpen(true)}
                   >

@@ -9,7 +9,7 @@ interface EmptyStateProps {
 export default function EmptyState({ onCreateWorkout }: EmptyStateProps) {
   return (
     <Card className="text-center py-12">
-      <CardContent>
+      <CardContent className="px-4">
         <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">No workouts yet</h3>
         <p className="text-muted-foreground mb-4">

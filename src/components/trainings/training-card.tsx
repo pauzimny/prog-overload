@@ -123,9 +123,9 @@ function TrainingActions({
   onDeleteTraining,
 }: TrainingActionsProps) {
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-2">
+    <div className="flex flex-col-reverse md:flex-row gap-2 w-full">
       {training.status === "plan" && (
-        <div className="flex gap-2">
+        <div className="flex gap-4 pb-2">
           <Button
             variant="default"
             size="sm"
@@ -190,7 +190,7 @@ function ExerciseItem({
         </Badge>
       </div>
 
-      <div className="ml-6 space-y-2">
+      <div className="space-y-2">
         {exercise.rounds.map((round: any, roundIndex: number) => (
           <RoundItem key={round.id} round={round} roundIndex={roundIndex} />
         ))}
