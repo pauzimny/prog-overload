@@ -272,6 +272,33 @@ export default function AuthPage() {
                     </div>
                   )}
 
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t"></div>
+                      <span className="bg-background px-3 text-xs text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                  >
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M22.56 12.25c0-1.38-.56-2.75-1.25-2.75s-2.75.56-2.75 2.75v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25zm-1.5 0v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25zm-1.5 0v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25z"
+                      />
+                    </svg>
+                    {loading
+                      ? "Creating account with Google..."
+                      : "Continue with Google"}
+                  </Button>
+
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating account..." : "Create Account"}
                   </Button>
