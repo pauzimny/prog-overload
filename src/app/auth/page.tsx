@@ -25,6 +25,28 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      // User will be redirected to dashboard after successful OAuth
+    } catch (error: any) {
+      setError(error.message || "Failed to sign in with Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -170,6 +192,23 @@ export default function AuthPage() {
 
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                  >
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M22.56 12.25c0-1.38-.56-2.75-1.25-2.75s-2.75.56-2.75 2.75v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25zm-1.5 0v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25zm-1.5 0v1.5c0 1.47 1.25 2.75 2.75 2.75 1.25 2.75 1.25z"
+                      />
+                    </svg>
+                    {loading
+                      ? "Signing in with Google..."
+                      : "Continue with Google"}
                   </Button>
                 </form>
               </TabsContent>
