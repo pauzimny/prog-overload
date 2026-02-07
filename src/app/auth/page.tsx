@@ -15,7 +15,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Dumbbell, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -121,7 +121,7 @@ export default function AuthPage() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <div className="h-6 w-6 rounded bg-primary"></div>
+              <Dumbbell className="h-6 w-6 rounded text-primary" />
             </div>
             <CardTitle className="text-2xl font-bold">
               Welcome to Progressive Overload
@@ -272,15 +272,9 @@ export default function AuthPage() {
                     </div>
                   )}
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t"></div>
-                      <span className="bg-background px-3 text-xs text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Creating account..." : "Create Account"}
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -297,10 +291,6 @@ export default function AuthPage() {
                     {loading
                       ? "Creating account with Google..."
                       : "Continue with Google"}
-                  </Button>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
               </TabsContent>
