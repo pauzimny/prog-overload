@@ -1,74 +1,120 @@
 /* PWA Service Worker for Progressive Overload */
 
-const STATIC_CACHE = "static-v3";
-const RUNTIME_CACHE = "runtime-v3";
+const STATIC_CACHE = "static-v5";
+const RUNTIME_CACHE = "runtime-v5";
 
 const STATIC_ASSETS = [
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/_next/static/css/",
+  "/_next/static/js/",
 ];
 
+// Only cache static assets, not dynamic content
 self.addEventListener("install", (event) => {
+  console.log("SW: Installing service worker");
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)),
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log("SW: Caching static assets");
+      return cache.addAll(STATIC_ASSETS);
+    }).catch((error) => {
+      console.error("SW: Install failed:", error);
+    })
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
+  console.log("SW: Activating service worker");
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => ![STATIC_CACHE, RUNTIME_CACHE].includes(key))
-            .map((key) => caches.delete(key)),
-        ),
-      ),
+    caches.keys().then((keys) => {
+      const oldKeys = keys.filter((key) => 
+        key !== STATIC_CACHE && key !== RUNTIME_CACHE
+      );
+      console.log("SW: Deleting old caches:", oldKeys);
+      return Promise.all(oldKeys.map((key) => caches.delete(key)));
+    }).then(() => self.clients.claim()).catch((error) => {
+      console.error("SW: Activation failed:", error);
+    })
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  
+  // Skip non-GET requests
+  if (request.method !== "GET") {
+    return;
+  }
 
+  // Skip caching for API routes and dynamic content
+  if (request.url.includes("/api/") || 
+      request.url.includes("/_next/data/") ||
+      request.url.includes("auth")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // For navigation requests, always try network first
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(request, copy);
-          });
+          // Only cache successful responses
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => {
+              cache.put(request, copy);
+            });
+          }
           return response;
         })
-        .catch(() => caches.match(request)),
+        .catch((error) => {
+          console.error("SW: Navigation fetch failed:", error);
+          return caches.match(request);
+        })
     );
     return;
   }
 
-  // 📦 Static assets → Cache First
+  // For static assets, try cache first with network fallback
   if (
     request.destination === "script" ||
     request.destination === "style" ||
     request.destination === "image" ||
-    request.destination === "font"
+    request.destination === "font" ||
+    request.destination === "manifest"
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        return (
-          cached ||
-          fetch(request).then((response) => {
+        if (cached) {
+          console.log("SW: Serving from cache:", request.url);
+          return cached;
+        }
+        
+        // If not in cache, fetch from network
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            console.log("SW: Caching new asset:", request.url);
             const copy = response.clone();
             caches.open(STATIC_CACHE).then((cache) => {
               cache.put(request, copy);
             });
-            return response;
-          })
-        );
-      }),
+          }
+          return response;
+        }).catch((error) => {
+          console.error("SW: Asset fetch failed:", error);
+          return new Response("Service Worker Error", { status: 500 });
+        });
+      })
     );
+    return;
   }
+
+  // For everything else, try network first
+  event.respondWith(
+    fetch(request).catch((error) => {
+      console.error("SW: Fetch failed, trying cache:", error);
+      return caches.match(request);
+    })
+  );
 });
