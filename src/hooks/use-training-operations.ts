@@ -5,7 +5,7 @@ import {
   updateRoundDoneStatus,
 } from "@/lib/database-operations";
 import { copyTrainingToClipboard } from "@/lib/training-utils";
-import type { TrainingWithExercises } from "@/lib/database-operations";
+import { TrainingWithExercises } from "@/schemas/database";
 import { useToast } from "@/hooks/use-toast";
 
 export function useTrainingOperations() {
@@ -108,7 +108,7 @@ export function useTrainingOperations() {
     if (
       window.confirm("Are you sure you want to mark this training as done?")
     ) {
-      return await toggleTrainingStatus(training.id, training.status);
+      return await toggleTrainingStatus(training.id!, training.status);
     }
     return false;
   };

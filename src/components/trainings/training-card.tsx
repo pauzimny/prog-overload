@@ -4,16 +4,15 @@ import { Badge } from "@/components/ui/badge";
 
 import { Calendar, Clock, CheckCircle, Circle } from "lucide-react";
 import { format } from "date-fns";
-import type { TrainingWithExercises } from "@/lib/database-operations";
 import { ExerciseItem } from "./excercise-item";
 import { TrainingActions } from "./training-actions";
-import { Exercise } from "@/schemas/database";
+import { Exercise, TrainingWithExercises } from "@/schemas/database";
 
 interface TrainingCardProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
   onSetAsDone: (training?: TrainingWithExercises) => void;
-  onCopyTraining: (training?: TrainingWithExercises) => void;
+  onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
   onToggleStatus: (trainingId: string, currentStatus: "plan" | "done") => void;
   onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
@@ -36,18 +35,21 @@ export default function TrainingCard({
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                {format(new Date(training.created_at), "MMMM d, yyyy")}
+                {format(
+                  new Date(training.created_at as string),
+                  "MMMM d, yyyy",
+                )}
               </span>
               <Clock className="h-4 w-4 text-muted-foreground ml-2" />
               <span className="text-sm text-muted-foreground">
-                {format(new Date(training.created_at), "h:mm a")}
+                {format(new Date(training.created_at as string), "h:mm a")}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
                 variant={training.status === "done" ? "default" : "secondary"}
                 className="cursor-pointer"
-                onClick={() => onToggleStatus(training.id, training.status)}
+                onClick={() => onToggleStatus(training.id!, training.status)}
               >
                 {training.status === "done" ? (
                   <CheckCircle className="h-3 w-3 mr-1" />

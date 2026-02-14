@@ -17,7 +17,7 @@ import {
   CheckCircle,
   Circle,
 } from "lucide-react";
-import { TrainingWithExercises } from "@/lib/database-operations";
+import { TrainingWithExercises } from "@/schemas/database";
 import {
   updateTrainingStatus,
   updateRound,
@@ -94,7 +94,7 @@ export default function WorkoutTimer({
       // Update all rounds with edited values including done status
       for (const exercise of editedTraining.exercises) {
         for (const round of exercise.rounds) {
-          await updateRound(round.id, {
+          await updateRound(round.id!, {
             weight: round.weight,
             reps: round.reps,
             comments: round.comments,
@@ -104,7 +104,7 @@ export default function WorkoutTimer({
       }
 
       // Mark training as done
-      await updateTrainingStatus(training.id, "done");
+      await updateTrainingStatus(training.id!, "done");
 
       toast({ message: "Workout completed successfully!", type: "success" });
       onComplete();
@@ -132,13 +132,13 @@ export default function WorkoutTimer({
     const newTraining = { ...editedTraining };
     newTraining.exercises[exerciseIndex].rounds.push({
       id: `temp-${Date.now()}`,
-      exercise_id: newTraining.exercises[exerciseIndex].id,
+      exercise_id: newTraining.exercises[exerciseIndex].id!,
       weight: 0,
       reps: 0,
       comments: "",
       done: false, // Add done field with default false
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(), // Add updated_at field
+      // updated_at: new Date().toISOString(), // Add updated_at field
     });
     setEditedTraining(newTraining);
   };
@@ -158,7 +158,7 @@ export default function WorkoutTimer({
 
     try {
       // Update in database
-      await updateRoundDoneStatus(round.id, newDoneStatus);
+      await updateRoundDoneStatus(round.id!, newDoneStatus);
 
       // Update local state
       const newTraining = { ...editedTraining };

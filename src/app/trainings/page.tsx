@@ -9,12 +9,10 @@ import TrainingCard from "@/components/trainings/training-card";
 import EmptyState from "@/components/trainings/empty-state";
 import TrainingsHeader from "@/components/trainings/trainings-header";
 import { useTrainingOperations } from "@/hooks/use-training-operations";
-import {
-  getUserTrainings,
-  type TrainingWithExercises,
-} from "@/lib/database-operations";
+import { getUserTrainings } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { ToastContainer } from "@/components/ui/toast";
+import { TrainingWithExercises } from "@/schemas/database";
 
 export default function TrainingsPage() {
   const { user } = useAuth();
@@ -84,8 +82,10 @@ export default function TrainingsPage() {
     }
   };
 
-  const handleSetAsDone = async (training: TrainingWithExercises) => {
+  const handleSetAsDone = async (training?: TrainingWithExercises) => {
+    if (!training) return;
     const success = await setTrainingAsDone(training);
+
     if (success) {
       fetchTrainings(); // Refresh list
     }

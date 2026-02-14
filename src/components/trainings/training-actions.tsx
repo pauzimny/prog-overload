@@ -5,7 +5,7 @@ import { Copy, Play, Trash2 } from "lucide-react";
 interface TrainingActionsProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
-  onSetAsDone: (training: TrainingWithExercises) => void;
+  onSetAsDone: (training?: TrainingWithExercises) => void;
   onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
 }
