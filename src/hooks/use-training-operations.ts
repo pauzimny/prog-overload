@@ -1,6 +1,9 @@
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
-import { updateTrainingStatus } from "@/lib/database-operations";
+import {
+  updateTrainingStatus,
+  updateRoundDoneStatus,
+} from "@/lib/database-operations";
 import { copyTrainingToClipboard } from "@/lib/training-utils";
 import type { TrainingWithExercises } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
@@ -110,11 +113,33 @@ export function useTrainingOperations() {
     return false;
   };
 
+  const toggleRoundDoneStatus = async (
+    roundId: string,
+    currentDone: boolean,
+  ) => {
+    try {
+      await updateRoundDoneStatus(roundId, !currentDone);
+      toast({
+        message: `Round marked as ${!currentDone ? "done" : "not done"}!`,
+        type: "success",
+      });
+      return true; // Indicate success
+    } catch (err: any) {
+      console.error("Failed to update round status: ", err);
+      toast({
+        message: "Failed to update round status",
+        type: "error",
+      });
+      return false; // Indicate failure
+    }
+  };
+
   return {
     copyTrainingToClipboard: handleCopyTraining,
     copyUserIdToClipboard,
     toggleTrainingStatus,
     deleteTraining,
     setTrainingAsDone,
+    toggleRoundDoneStatus,
   };
 }

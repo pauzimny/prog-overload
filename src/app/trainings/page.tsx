@@ -31,6 +31,7 @@ export default function TrainingsPage() {
     toggleTrainingStatus,
     deleteTraining,
     setTrainingAsDone,
+    toggleRoundDoneStatus,
   } = useTrainingOperations();
 
   const fetchTrainings = async () => {
@@ -86,7 +87,17 @@ export default function TrainingsPage() {
   const handleSetAsDone = async (training: TrainingWithExercises) => {
     const success = await setTrainingAsDone(training);
     if (success) {
-      fetchTrainings(); // Refresh the list
+      fetchTrainings(); // Refresh list
+    }
+  };
+
+  const handleToggleRoundDone = async (
+    roundId: string,
+    currentDone: boolean,
+  ) => {
+    const success = await toggleRoundDoneStatus(roundId, currentDone);
+    if (success) {
+      fetchTrainings(); // Refresh list to show updated round status
     }
   };
 
@@ -149,6 +160,7 @@ export default function TrainingsPage() {
                         onCopyTraining={copyTrainingToClipboard}
                         onDeleteTraining={handleDeleteTraining}
                         onToggleStatus={handleToggleStatus}
+                        onToggleRoundDone={handleToggleRoundDone}
                       />
                     ))}
                   </div>

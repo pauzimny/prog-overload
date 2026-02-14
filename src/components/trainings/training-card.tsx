@@ -23,6 +23,7 @@ interface TrainingCardProps {
   onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
   onToggleStatus: (trainingId: string, currentStatus: "plan" | "done") => void;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
 }
 
 export default function TrainingCard({
@@ -32,6 +33,7 @@ export default function TrainingCard({
   onCopyTraining,
   onDeleteTraining,
   onToggleStatus,
+  onToggleRoundDone,
 }: TrainingCardProps) {
   return (
     <Card key={training.id} className="overflow-hidden">
@@ -100,6 +102,7 @@ export default function TrainingCard({
             exercise={exercise}
             exerciseIndex={exerciseIndex}
             totalExercises={training.exercises.length}
+            onToggleRoundDone={onToggleRoundDone}
           />
         ))}
       </CardContent>
@@ -172,12 +175,14 @@ interface ExerciseItemProps {
   exercise: any;
   exerciseIndex: number;
   totalExercises: number;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
 }
 
 function ExerciseItem({
   exercise,
   exerciseIndex,
   totalExercises,
+  onToggleRoundDone,
 }: ExerciseItemProps) {
   return (
     <div className="space-y-3">
@@ -192,7 +197,12 @@ function ExerciseItem({
 
       <div className="space-y-2">
         {exercise.rounds.map((round: any, roundIndex: number) => (
-          <RoundItem key={round.id} round={round} roundIndex={roundIndex} />
+          <RoundItem
+            key={round.id}
+            round={round}
+            roundIndex={roundIndex}
+            onToggleRoundDone={onToggleRoundDone}
+          />
         ))}
       </div>
 
@@ -204,24 +214,46 @@ function ExerciseItem({
 interface RoundItemProps {
   round: any;
   roundIndex: number;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
 }
 
-function RoundItem({ round, roundIndex }: RoundItemProps) {
+function RoundItem({ round, roundIndex, onToggleRoundDone }: RoundItemProps) {
   return (
     <div
       key={round.id}
       className="flex items-center gap-4 text-sm grow w-full justify-between"
     >
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onToggleRoundDone(round.id, round.done)}
+          className="p-1 h-6 w-6"
+          title={round.done ? "Mark as not done" : "Mark as done"}
+        >
+          {round.done ? (
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          ) : (
+            <Circle className="h-4 w-4 text-muted-foreground" />
+          )}
+        </Button>
         <Badge variant="secondary" className="text-xs hidden md:block">
           Set {roundIndex + 1}
         </Badge>
         <Badge variant="secondary" className="text-xs md:hidden">
           {roundIndex + 1}
         </Badge>
-        <span className="font-medium">{round.weight} kg</span>
+        <span
+          className={`font-medium ${round.done ? "line-through text-muted-foreground" : ""}`}
+        >
+          {round.weight} kg
+        </span>
         <span className="text-muted-foreground">×</span>
-        <span className="font-medium">{round.reps} reps</span>
+        <span
+          className={`font-medium ${round.done ? "line-through text-muted-foreground" : ""}`}
+        >
+          {round.reps} reps
+        </span>
       </div>
       {round.comments && (
         <span className="text-muted-foreground italic">({round.comments})</span>

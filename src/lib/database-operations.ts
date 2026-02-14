@@ -37,7 +37,9 @@ type DatabaseRound = {
   weight: number;
   reps: number;
   comments: string | null;
+  done: boolean;
   created_at: string;
+  updated_at: string;
 };
 
 type TrainingWithExercises = DatabaseTraining & {
@@ -188,6 +190,21 @@ export async function updateRound(
   return data as DatabaseRound;
 }
 
+export async function updateRoundDoneStatus(
+  id: string,
+  done: boolean,
+): Promise<DatabaseRound> {
+  const { data, error } = await supabase
+    .from("rounds")
+    .update({ done })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DatabaseRound;
+}
+
 export async function deleteRound(id: string): Promise<void> {
   const { error } = await supabase.from("rounds").delete().eq("id", id);
 
@@ -218,6 +235,7 @@ export async function createTrainingWithExercises(
             weight: round.weight,
             reps: round.reps,
             comments: round.comments || null,
+            done: false, // Default to false when creating new rounds
             exercise_id: createdExercise.id,
           }),
         ),

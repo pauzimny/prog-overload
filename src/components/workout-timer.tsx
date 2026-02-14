@@ -16,9 +16,15 @@ import {
   Trash2,
   Check,
   Dumbbell,
+  CheckCircle,
+  Circle,
 } from "lucide-react";
 import { TrainingWithExercises } from "@/lib/database-operations";
-import { updateTrainingStatus, updateRound } from "@/lib/database-operations";
+import {
+  updateTrainingStatus,
+  updateRound,
+  updateRoundDoneStatus,
+} from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 
 interface WorkoutTimerProps {
@@ -34,28 +40,40 @@ export default function WorkoutTimer({
   const [seconds, setSeconds] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
-  const [editedTraining, setEditedTraining] = useState(training);
+  const [editedTraining, setEditedTraining] = useState(() => {
+    // Ensure all rounds have done field with default false
+    return {
+      ...training,
+      exercises: training.exercises.map((exercise) => ({
+        ...exercise,
+        rounds: exercise.rounds.map((round) => ({
+          ...round,
+          done: round.done || false, // Default to false if undefined
+        })),
+      })),
+    };
+  });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
+  // useEffect(() => {
+  //   if (isRunning) {
+  //     intervalRef.current = setInterval(() => {
+  //       setSeconds((prev) => prev + 1);
+  //     }, 1000);
+  //   } else {
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //   }
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isRunning]);
+  //   return () => {
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //   };
+  // }, [isRunning]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -74,13 +92,14 @@ export default function WorkoutTimer({
 
   const handleComplete = async () => {
     try {
-      // Update all rounds with the edited values
+      // Update all rounds with edited values including done status
       for (const exercise of editedTraining.exercises) {
         for (const round of exercise.rounds) {
           await updateRound(round.id, {
             weight: round.weight,
             reps: round.reps,
             comments: round.comments,
+            done: round.done, // Preserve done status
           });
         }
       }
@@ -118,7 +137,9 @@ export default function WorkoutTimer({
       weight: 0,
       reps: 0,
       comments: "",
+      done: false, // Add done field with default false
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(), // Add updated_at field
     });
     setEditedTraining(newTraining);
   };
@@ -131,6 +152,33 @@ export default function WorkoutTimer({
     }
   };
 
+  const toggleRoundDone = async (exerciseIndex: number, roundIndex: number) => {
+    const round = editedTraining.exercises[exerciseIndex].rounds[roundIndex];
+    const currentDoneStatus = round.done || false; // Handle undefined case
+    const newDoneStatus = !currentDoneStatus;
+
+    try {
+      // Update in database
+      await updateRoundDoneStatus(round.id, newDoneStatus);
+
+      // Update local state
+      const newTraining = { ...editedTraining };
+      newTraining.exercises[exerciseIndex].rounds[roundIndex] = {
+        ...round,
+        done: newDoneStatus,
+      };
+      setEditedTraining(newTraining);
+
+      toast({
+        message: `Round ${roundIndex + 1} marked as ${newDoneStatus ? "done" : "not done"}!`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to update round status:", error);
+      toast({ message: "Failed to update round status", type: "error" });
+    }
+  };
+
   const currentExercise = editedTraining.exercises[currentExerciseIndex];
 
   return (
@@ -138,9 +186,9 @@ export default function WorkoutTimer({
       {/* Small Timer Display */}
       <Card className="text-center">
         <CardContent className="py-4">
-          <div className="text-2xl font-mono font-bold text-primary mb-2">
+          {/* <div className="text-2xl font-mono font-bold text-primary mb-2">
             {formatTime(seconds)}
-          </div>
+          </div> */}
           <div className="flex gap-2 justify-center">
             <Button
               onClick={handleStartPause}
@@ -199,7 +247,30 @@ export default function WorkoutTimer({
           {currentExercise?.rounds.map((round, roundIndex) => (
             <div key={round.id} className="space-y-3">
               <div className="flex items-center justify-between">
-                <Badge variant="secondary">Round {roundIndex + 1}</Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      toggleRoundDone(currentExerciseIndex, roundIndex)
+                    }
+                    className="p-1 h-6 w-6"
+                    title={
+                      round.done === true
+                        ? "Mark as not done"
+                        : round.done === false
+                          ? "Mark as done"
+                          : "Mark as done"
+                    }
+                  >
+                    {round.done === true ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                  <Badge variant="secondary">Round {roundIndex + 1}</Badge>
+                </div>
                 {currentExercise.rounds.length > 1 && (
                   <Button
                     variant="ghost"
@@ -213,7 +284,9 @@ export default function WorkoutTimer({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div
+                className={`grid grid-cols-2 gap-4 ${round.done === true ? "opacity-60" : ""}`}
+              >
                 <div>
                   <Label htmlFor={`weight-${roundIndex}`}>Weight (kg)</Label>
                   <Input
@@ -221,6 +294,7 @@ export default function WorkoutTimer({
                     type="number"
                     step="0.5"
                     value={round.weight}
+                    className={round.done === true ? "line-through" : ""}
                     onChange={(e) =>
                       updateRoundData(
                         currentExerciseIndex,
@@ -237,6 +311,7 @@ export default function WorkoutTimer({
                     id={`reps-${roundIndex}`}
                     type="number"
                     value={round.reps}
+                    className={round.done === true ? "line-through" : ""}
                     onChange={(e) =>
                       updateRoundData(
                         currentExerciseIndex,
@@ -255,6 +330,7 @@ export default function WorkoutTimer({
                   id={`comments-${roundIndex}`}
                   placeholder="Optional notes about this round"
                   value={round.comments || ""}
+                  className={round.done === true ? "line-through" : ""}
                   onChange={(e) =>
                     updateRoundData(
                       currentExerciseIndex,

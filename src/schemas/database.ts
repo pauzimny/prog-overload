@@ -15,6 +15,7 @@ export const roundSchema = z.object({
   weight: z.number().positive("Weight must be positive"),
   reps: z.number().int().positive("Reps must be a positive integer"),
   comments: z.string().nullable().optional(),
+  done: z.boolean().default(false),
   created_at: z.string().datetime().optional(),
 });
 

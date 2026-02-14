@@ -1,7 +1,7 @@
 /* PWA Service Worker for Progressive Overload */
 
-const STATIC_CACHE = "static-v6";
-const RUNTIME_CACHE = "runtime-v6";
+const STATIC_CACHE = "static-v7";
+const RUNTIME_CACHE = "runtime-v7";
 
 const STATIC_ASSETS = [
   "/manifest.json",
