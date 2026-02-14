@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import ProtectedRoute from "@/components/protected-route";
 import CreateTrainingForm from "@/components/create-training-form";
@@ -34,7 +34,7 @@ export default function TrainingsPage() {
     toggleRoundDoneStatus,
   } = useTrainingOperations();
 
-  const fetchTrainings = async () => {
+  const fetchTrainings = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -47,11 +47,11 @@ export default function TrainingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchTrainings();
-  }, [user]);
+  }, [fetchTrainings]);
 
   const handleCreateSuccess = () => {
     setIsCreateFormOpen(false);

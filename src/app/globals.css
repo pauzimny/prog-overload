@@ -142,7 +142,7 @@
     /* Better touch targets */
     button,
     .btn {
-      min-height: 44px; /* iOS touch target size */
+      min-height: 36px; /* iOS touch target size */
       min-width: 44px;
     }
 

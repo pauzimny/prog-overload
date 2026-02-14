@@ -1,26 +1,19 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  Clock,
-  Trash2,
-  Copy,
-  CheckCircle,
-  Circle,
-  Play,
-  Check,
-  Dumbbell,
-} from "lucide-react";
+
+import { Calendar, Clock, CheckCircle, Circle } from "lucide-react";
 import { format } from "date-fns";
 import type { TrainingWithExercises } from "@/lib/database-operations";
+import { ExerciseItem } from "./excercise-item";
+import { TrainingActions } from "./training-actions";
+import { Exercise } from "@/schemas/database";
 
 interface TrainingCardProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
-  onSetAsDone: (training: TrainingWithExercises) => void;
-  onCopyTraining: (training: TrainingWithExercises) => void;
+  onSetAsDone: (training?: TrainingWithExercises) => void;
+  onCopyTraining: (training?: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
   onToggleStatus: (trainingId: string, currentStatus: "plan" | "done") => void;
   onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
@@ -96,7 +89,7 @@ export default function TrainingCard({
       )}
 
       <CardContent className="space-y-4">
-        {training.exercises.map((exercise: any, exerciseIndex: number) => (
+        {training.exercises.map((exercise: Exercise, exerciseIndex: number) => (
           <ExerciseItem
             key={exercise.id}
             exercise={exercise}
@@ -107,157 +100,5 @@ export default function TrainingCard({
         ))}
       </CardContent>
     </Card>
-  );
-}
-
-interface TrainingActionsProps {
-  training: TrainingWithExercises;
-  onStartWorkout: (training: TrainingWithExercises) => void;
-  onSetAsDone: (training: TrainingWithExercises) => void;
-  onCopyTraining: (training: TrainingWithExercises) => void;
-  onDeleteTraining: (trainingId: string) => void;
-}
-
-function TrainingActions({
-  training,
-  onStartWorkout,
-  onSetAsDone,
-  onCopyTraining,
-  onDeleteTraining,
-}: TrainingActionsProps) {
-  return (
-    <div className="flex flex-col-reverse md:flex-row gap-2 w-full">
-      {training.status === "plan" && (
-        <div className="flex gap-4 pb-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => onStartWorkout(training)}
-            title="Start this workout"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            Start Workout
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSetAsDone(training)}
-            title="Mark this training as done"
-          >
-            <Check className="h-4 w-4 mr-2" />
-            Set as Done
-          </Button>
-        </div>
-      )}
-      <div className="flex gap-2 justify-end w-full">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onCopyTraining(training)}
-          title="Copy training summary to clipboard"
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDeleteTraining(training.id)}
-          title="Delete this workout"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-interface ExerciseItemProps {
-  exercise: any;
-  exerciseIndex: number;
-  totalExercises: number;
-  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
-}
-
-function ExerciseItem({
-  exercise,
-  exerciseIndex,
-  totalExercises,
-  onToggleRoundDone,
-}: ExerciseItemProps) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Dumbbell className="h-4 w-4 text-primary" />
-        <h4 className="font-semibold">{exercise.name}</h4>
-        <Badge variant="outline" className="text-xs">
-          {exercise.rounds.length}{" "}
-          {exercise.rounds.length === 1 ? "Set" : "Sets"}
-        </Badge>
-      </div>
-
-      <div className="space-y-2">
-        {exercise.rounds.map((round: any, roundIndex: number) => (
-          <RoundItem
-            key={round.id}
-            round={round}
-            roundIndex={roundIndex}
-            onToggleRoundDone={onToggleRoundDone}
-          />
-        ))}
-      </div>
-
-      {exerciseIndex < totalExercises - 1 && <Separator className="ml-6" />}
-    </div>
-  );
-}
-
-interface RoundItemProps {
-  round: any;
-  roundIndex: number;
-  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
-}
-
-function RoundItem({ round, roundIndex, onToggleRoundDone }: RoundItemProps) {
-  return (
-    <div
-      key={round.id}
-      className="flex items-center gap-4 text-sm grow w-full justify-between"
-    >
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onToggleRoundDone(round.id, round.done)}
-          className="p-1 h-6 w-6"
-          title={round.done ? "Mark as not done" : "Mark as done"}
-        >
-          {round.done ? (
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          ) : (
-            <Circle className="h-4 w-4 text-muted-foreground" />
-          )}
-        </Button>
-        <Badge variant="secondary" className="text-xs hidden md:block">
-          Set {roundIndex + 1}
-        </Badge>
-        <Badge variant="secondary" className="text-xs md:hidden">
-          {roundIndex + 1}
-        </Badge>
-        <span
-          className={`font-medium ${round.done ? "line-through text-muted-foreground" : ""}`}
-        >
-          {round.weight} kg
-        </span>
-        <span className="text-muted-foreground">×</span>
-        <span
-          className={`font-medium ${round.done ? "line-through text-muted-foreground" : ""}`}
-        >
-          {round.reps} reps
-        </span>
-      </div>
-      {round.comments && (
-        <span className="text-muted-foreground italic">({round.comments})</span>
-      )}
-    </div>
   );
 }

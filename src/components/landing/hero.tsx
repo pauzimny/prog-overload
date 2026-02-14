@@ -1,7 +1,10 @@
 import { ArrowRight, Dumbbell, Link } from "lucide-react";
 import { Button } from "../ui/button";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export const Hero = () => {
+  const router = useRouter();
   return (
     <section className="relative overflow-hidden">
       <div className="container mx-auto px-4 pb-20 pt-4 lg:py-32">
@@ -27,20 +30,19 @@ export const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link href="/auth">
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
             <Button
-              variant="outline"
               size="lg"
               className="text-lg px-8 py-6"
-              asChild
+              onClick={() => router.push("/auth")}
             >
-              <Link href="#features">Learn More</Link>
+              {/* <Link href="/auth"> */}
+              Get Started
+              <ArrowRight className="ml-2 h-5 w-5" />
+              {/* </Link> */}
             </Button>
+            {/* <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Link href="#features">Learn More</Link>
+            </Button> */}
           </div>
         </div>
       </div>

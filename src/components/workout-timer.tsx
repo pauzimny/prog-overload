@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Play,
   Pause,
-  Square,
   Plus,
   Trash2,
   Check,
@@ -37,9 +35,9 @@ export default function WorkoutTimer({
   onComplete,
 }: WorkoutTimerProps) {
   const [isRunning, setIsRunning] = useState(true); // Auto-start
-  const [seconds, setSeconds] = useState(0);
+  // const [seconds, setSeconds] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  // const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [editedTraining, setEditedTraining] = useState(() => {
     // Ensure all rounds have done field with default false
     return {
@@ -219,7 +217,7 @@ export default function WorkoutTimer({
           <div className="space-y-2">
             {editedTraining.exercises.map((exercise, index) => (
               <Button
-                key={index}
+                key={`exercise-${exercise}`}
                 variant={index === currentExerciseIndex ? "default" : "outline"}
                 className="w-full justify-start"
                 onClick={() => setCurrentExerciseIndex(index)}

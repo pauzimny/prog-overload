@@ -1,6 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Copy, Plus } from "lucide-react";
-
 interface TrainingsHeaderProps {
   onCopyUserId: () => void;
   onCreateWorkout: () => void;
@@ -13,13 +10,15 @@ export default function TrainingsHeader({
   return (
     <div className="mb-8 flex flex-col md:flex-row gap-2 items-center justify-between">
       <div className="flex flex-col items-center gap-1 pb-2">
-        <h1 className="text-3xl font-bold tracking-tight">Your Workouts</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+          Your Workouts
+        </h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Track and manage all your training sessions
         </p>
       </div>
       <div className="flex gap-2">
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           onClick={onCopyUserId}
@@ -27,11 +26,11 @@ export default function TrainingsHeader({
         >
           <Copy className="h-4 w-4 mr-2" />
           Copy User ID
-        </Button>
-        <Button onClick={onCreateWorkout}>
+        </Button> */}
+        {/* <Button onClick={onCreateWorkout}>
           <Plus className="h-4 w-4 mr-2" />
           New Workout
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
