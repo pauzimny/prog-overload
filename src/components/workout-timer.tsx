@@ -24,6 +24,7 @@ import {
   updateRoundDoneStatus,
 } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "./ui/textarea";
 
 interface WorkoutTimerProps {
   training: TrainingWithExercises;
@@ -292,7 +293,6 @@ export default function WorkoutTimer({
                     type="number"
                     step="0.5"
                     value={round.weight ?? ""}
-                    className={round.done === true ? "line-through" : ""}
                     min="0"
                     onChange={(e) => {
                       updateRoundData(
@@ -313,7 +313,6 @@ export default function WorkoutTimer({
                     type="number"
                     value={round.reps}
                     min="0"
-                    className={round.done === true ? "line-through" : ""}
                     onChange={(e) => {
                       updateRoundData(
                         currentExerciseIndex,
@@ -326,21 +325,20 @@ export default function WorkoutTimer({
                     }}
                   />
                 </div>
-                <Input
-                  id={`comments-${roundIndex}`}
-                  placeholder="Optional notes about this round"
-                  value={round.comments || ""}
-                  className={round.done === true ? "line-through" : ""}
-                  onChange={(e) =>
-                    updateRoundData(
-                      currentExerciseIndex,
-                      roundIndex,
-                      "comments",
-                      e.target.value,
-                    )
-                  }
-                />
               </div>
+              <Textarea
+                id={`comments-${roundIndex}`}
+                placeholder="Optional notes about this round"
+                value={round.comments || ""}
+                onChange={(e) =>
+                  updateRoundData(
+                    currentExerciseIndex,
+                    roundIndex,
+                    "comments",
+                    e.target.value,
+                  )
+                }
+              />
 
               {roundIndex < currentExercise.rounds.length - 1 && <Separator />}
             </div>
