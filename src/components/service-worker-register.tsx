@@ -11,6 +11,10 @@ export default function ServiceWorkerRegister() {
     navigator.serviceWorker.register("/sw.js").then((registration) => {
       console.log("SW registered:", registration);
 
+      // Check for updates immediately
+      registration.update();
+
+      // Listen for updates
       registration.addEventListener("updatefound", () => {
         const newWorker = registration.installing;
 
@@ -30,6 +34,23 @@ export default function ServiceWorkerRegister() {
           }
         });
       });
+
+      // Periodically check for updates (every 5 minutes)
+      setInterval(
+        () => {
+          registration.update();
+        },
+        5 * 60 * 1000,
+      );
+    });
+
+    // Handle controller change (when new SW takes control)
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      console.log("🔄 SW controller changed, reloading page");
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
     });
   }, []);
 

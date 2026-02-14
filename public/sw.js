@@ -1,7 +1,7 @@
 /* PWA Service Worker for Progressive Overload */
 
-const STATIC_CACHE = "static-v7";
-const RUNTIME_CACHE = "runtime-v7";
+const STATIC_CACHE = "static-v8";
+const RUNTIME_CACHE = "runtime-v8";
 
 const STATIC_ASSETS = [
   "/manifest.json",
@@ -13,45 +13,32 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
   console.log("SW: Installing service worker");
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) => {
-        console.log("SW: Caching static assets");
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .catch((error) => {
-        console.error("SW: Install failed:", error);
-      }),
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log("SW: Caching static assets");
+      return cache.addAll(STATIC_ASSETS);
+    }),
   );
-  self.skipWaiting();
 });
 
+// Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
   console.log("SW: Activating service worker");
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => {
-        const oldKeys = keys.filter(
-          (key) => key !== STATIC_CACHE && key !== RUNTIME_CACHE,
-        );
-        console.log("SW: Deleting old caches:", oldKeys);
-        return Promise.all(oldKeys.map((key) => caches.delete(key)));
-      })
-      .then(() => self.clients.claim())
-      .catch((error) => {
-        console.error("SW: Activation failed:", error);
-      }),
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== STATIC_CACHE && cacheName !== RUNTIME_CACHE) {
+            console.log("SW: Deleting old cache:", cacheName);
+            return caches.delete(cacheName);
+          }
+        }),
+      );
+    }),
   );
 });
 
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-
-  // Skip non-GET requests
-  if (request.method !== "GET") {
-    return;
-  }
+  const request = event.request;
 
   // Skip caching for API routes, admin routes, and dynamic content
   if (
@@ -60,6 +47,7 @@ self.addEventListener("fetch", (event) => {
     request.url.includes("auth") ||
     request.url.includes("/admin")
   ) {
+    console.log("SW: Skipping cache for:", request.url);
     event.respondWith(fetch(request));
     return;
   }
@@ -68,6 +56,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     if (request.url.includes("/admin")) {
       // Never cache admin pages - always fetch from network
+      console.log("SW: Admin navigation - fetching from network:", request.url);
       event.respondWith(fetch(request));
       return;
     }
@@ -86,44 +75,14 @@ self.addEventListener("fetch", (event) => {
         })
         .catch((error) => {
           console.error("SW: Navigation fetch failed:", error);
-          return caches.match(request);
-        }),
-    );
-    return;
-  }
-
-  // For static assets, try cache first with network fallback
-  if (
-    request.destination === "script" ||
-    request.destination === "style" ||
-    request.destination === "image" ||
-    request.destination === "font" ||
-    request.destination === "manifest"
-  ) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) {
-          console.log("SW: Serving from cache:", request.url);
-          return cached;
-        }
-
-        // If not in cache, fetch from network
-        return fetch(request)
-          .then((response) => {
-            if (response.ok) {
-              console.log("SW: Caching new asset:", request.url);
-              const copy = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => {
-                cache.put(request, copy);
-              });
+          // Fallback to cache if network fails
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
             }
-            return response;
-          })
-          .catch((error) => {
-            console.error("SW: Asset fetch failed:", error);
-            return new Response("Service Worker Error", { status: 500 });
+            return new Response("Offline", { status: 503 });
           });
-      }),
+        }),
     );
     return;
   }
