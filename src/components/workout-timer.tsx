@@ -293,16 +293,19 @@ export default function WorkoutTimer({
                     id={`weight-${roundIndex}`}
                     type="number"
                     step="0.5"
-                    value={round.weight}
+                    value={round.weight ?? ""}
                     className={round.done === true ? "line-through" : ""}
-                    onChange={(e) =>
+                    min="0"
+                    onChange={(e) => {
                       updateRoundData(
                         currentExerciseIndex,
                         roundIndex,
                         "weight",
-                        parseFloat(e.target.value) || 0,
-                      )
-                    }
+                        Number.isNaN(e.target.valueAsNumber)
+                          ? ""
+                          : e.target.valueAsNumber,
+                      );
+                    }}
                   />
                 </div>
                 <div>
@@ -311,21 +314,20 @@ export default function WorkoutTimer({
                     id={`reps-${roundIndex}`}
                     type="number"
                     value={round.reps}
+                    min="0"
                     className={round.done === true ? "line-through" : ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       updateRoundData(
                         currentExerciseIndex,
                         roundIndex,
                         "reps",
-                        parseInt(e.target.value) || 0,
-                      )
-                    }
+                        Number.isNaN(e.target.valueAsNumber)
+                          ? ""
+                          : e.target.valueAsNumber,
+                      );
+                    }}
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor={`comments-${roundIndex}`}>Comments</Label>
                 <Input
                   id={`comments-${roundIndex}`}
                   placeholder="Optional notes about this round"
