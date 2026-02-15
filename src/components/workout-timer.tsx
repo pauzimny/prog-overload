@@ -18,11 +18,7 @@ import {
   Circle,
 } from "lucide-react";
 import { TrainingWithExercises } from "@/schemas/database";
-import {
-  updateTrainingStatus,
-  updateRound,
-  updateRoundDoneStatus,
-} from "@/lib/database-operations";
+import { updateTrainingStatus, updateRound } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "./ui/textarea";
 
@@ -157,15 +153,20 @@ export default function WorkoutTimer({
     const newDoneStatus = !currentDoneStatus;
 
     try {
-      // Update in database
-      await updateRoundDoneStatus(round.id!, newDoneStatus);
-
       // Update local state
       const newTraining = { ...editedTraining };
       newTraining.exercises[exerciseIndex].rounds[roundIndex] = {
         ...round,
         done: newDoneStatus,
       };
+
+      // Update in database
+
+      await updateRound(round.id!, {
+        ...round,
+        done: newDoneStatus,
+      });
+      // await updateRoundDoneStatus(round.id!, newDoneStatus);
       setEditedTraining(newTraining);
 
       toast({
@@ -218,7 +219,7 @@ export default function WorkoutTimer({
           <div className="space-y-2">
             {editedTraining.exercises.map((exercise, index) => (
               <Button
-                key={`exercise-${exercise}`}
+                key={`exercise-${exercise.id}`}
                 variant={index === currentExerciseIndex ? "default" : "outline"}
                 className="w-full justify-start"
                 onClick={() => setCurrentExerciseIndex(index)}
