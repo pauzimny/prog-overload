@@ -70,7 +70,27 @@ export async function getUserTrainings(
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data as TrainingWithExercises[];
+
+  const sortedData = data.map((training: TrainingWithExercises) => ({
+    ...training,
+    exercises: training.exercises
+      .map((exercise: DatabaseExercise & { rounds: DatabaseRound[] }) => ({
+        ...exercise,
+        rounds: exercise.rounds.sort(
+          (a: DatabaseRound, b: DatabaseRound) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        ),
+      }))
+      .sort(
+        (
+          a: DatabaseExercise & { rounds: DatabaseRound[] },
+          b: DatabaseExercise & { rounds: DatabaseRound[] },
+        ) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      ),
+  }));
+
+  return sortedData as TrainingWithExercises[];
 }
 
 export async function createTraining(
