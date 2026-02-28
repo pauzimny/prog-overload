@@ -12,7 +12,7 @@ import { useTrainingOperations } from "@/hooks/use-training-operations";
 import { getUserTrainings } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { ToastContainer } from "@/components/ui/toast";
-import { TrainingWithExercises } from "@/schemas/database";
+import type { TrainingWithExercises } from "@/schemas/database";
 
 export default function TrainingsPage() {
   const { user } = useAuth();
@@ -24,7 +24,6 @@ export default function TrainingsPage() {
     useState<TrainingWithExercises | null>(null);
   const { toasts, removeToast } = useToast();
   const {
-    copyTrainingToClipboard,
     copyUserIdToClipboard,
     toggleTrainingStatus,
     setTrainingAsActive,
@@ -187,7 +186,7 @@ export default function TrainingsPage() {
                         training={training}
                         onStartWorkout={startWorkout}
                         onSetAsDone={handleSetAsDone}
-                        onCopyTraining={copyTrainingToClipboard}
+                        // onCopyTraining={copyTrainingToClipboard}
                         onDeleteTraining={handleDeleteTraining}
                         onToggleStatus={handleToggleStatus}
                         onToggleRoundDone={handleToggleRoundDone}

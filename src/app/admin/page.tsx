@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { Shield, Upload } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
@@ -44,31 +44,7 @@ export default function AdminPage() {
   );
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) {
-        setError("Please log in to access admin panel.");
-        setLoading(false);
-        return;
-      }
-
-      const adminStatus = await isAdmin(user.id);
-      setIsAdminUser(adminStatus);
-
-      if (!adminStatus) {
-        setError("Access denied. Admin privileges required.");
-        setLoading(false);
-        return;
-      }
-
-      fetchAdminStatsData();
-      fetchUsers();
-    };
-
-    checkAdminStatus();
-  }, [user]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const { users, userTrainings } = await fetchUsersWithTrainings();
       setUsers(users);
@@ -76,7 +52,7 @@ export default function AdminPage() {
     } catch (err) {
       console.error("Failed to fetch users:", err);
     }
-  };
+  }, []);
 
   const toggleUserExpanded = (userId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -147,7 +123,7 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAdminStatsData = async () => {
+  const fetchAdminStatsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -161,12 +137,36 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleUploadTrainingForUser = (userId: string) => {
     setSelectedUserId(userId);
     setIsUploadDialogOpen(true);
   };
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setError("Please log in to access admin panel.");
+        setLoading(false);
+        return;
+      }
+
+      const adminStatus = await isAdmin(user.id);
+      setIsAdminUser(adminStatus);
+
+      if (!adminStatus) {
+        setError("Access denied. Admin privileges required.");
+        setLoading(false);
+        return;
+      }
+
+      fetchAdminStatsData();
+      fetchUsers();
+    };
+
+    checkAdminStatus();
+  }, [user, fetchUsers, fetchAdminStatsData]);
 
   if (loading) {
     return (

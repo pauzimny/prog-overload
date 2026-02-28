@@ -5,21 +5,12 @@ import {
   updateRoundDoneStatus,
   updateExerciseActiveStatus,
 } from "@/lib/database-operations";
-import { copyTrainingToClipboard } from "@/lib/training-utils";
-import { TrainingWithExercises } from "@/schemas/database";
+import type { TrainingWithExercises } from "@/schemas/database";
 import { useToast } from "@/hooks/use-toast";
 
 export function useTrainingOperations() {
   const { user } = useAuth();
   const { toast } = useToast();
-
-  const handleCopyTraining = async (training: TrainingWithExercises) => {
-    const result = await copyTrainingToClipboard(training);
-    toast({
-      message: result.message,
-      type: result.success ? "success" : "error",
-    });
-  };
 
   const copyUserIdToClipboard = () => {
     if (user?.id) {
@@ -202,7 +193,6 @@ export function useTrainingOperations() {
   };
 
   return {
-    copyTrainingToClipboard: handleCopyTraining,
     copyUserIdToClipboard,
     toggleTrainingStatus,
     setTrainingAsPlan,

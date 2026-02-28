@@ -63,7 +63,7 @@ export async function getUserTrainings(
       *,
       exercises (
         *,
-        rounds (*)
+        rounds (id, exercise_id, weight, reps, comments, done, created_at, updated_at)
       )
     `,
     )

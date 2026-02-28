@@ -1,19 +1,19 @@
-import { TrainingWithExercises } from "@/schemas/database";
+import type { TrainingWithExercises } from "@/schemas/database";
 import { Button } from "../ui/button";
-import { Copy, Play, Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 
 interface TrainingActionsProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
   onSetAsDone: (training?: TrainingWithExercises) => void;
-  onCopyTraining: (training: TrainingWithExercises) => void;
+  // onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
 }
 export const TrainingActions = ({
   training,
   onStartWorkout,
   onSetAsDone,
-  onCopyTraining,
+  // onCopyTraining,
   onDeleteTraining,
 }: TrainingActionsProps) => {
   return (
@@ -40,14 +40,14 @@ export const TrainingActions = ({
           </Button>
 
           <div className="flex gap-2 justify-end w-full">
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={() => onCopyTraining(training)}
               title="Copy training summary to clipboard"
             >
               <Copy className="h-4 w-4" />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="sm"
@@ -81,14 +81,14 @@ export const TrainingActions = ({
           </Button>
 
           <div className="flex gap-2 justify-end w-full">
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={() => onCopyTraining(training)}
               title="Copy training summary to clipboard"
             >
               <Copy className="h-4 w-4" />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="sm"

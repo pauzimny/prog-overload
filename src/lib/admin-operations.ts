@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { Round } from "@/schemas/database";
+import { getUserTrainings } from "./database-operations";
 
 export interface AdminStats {
   totalUsers: number;
@@ -209,28 +210,8 @@ export async function fetchUsersWithTrainings(): Promise<{
     // Fetch trainings for each user with exercises and rounds
     const trainingsData: { [key: string]: any[] } = {};
     for (const user of usersData) {
-      const { data } = await supabase
-        .from("trainings")
-        .select(
-          `
-          *,
-          exercises (
-            id,
-            name,
-            created_at,
-            rounds (
-              id,
-              weight,
-              reps,
-              comments,
-              created_at
-            )
-          )
-        `,
-        )
-        .eq("user_id", user.user_id)
-        .order("created_at", { ascending: false });
-      trainingsData[user.user_id] = data || [];
+      const userTrainings = await getUserTrainings(user.user_id);
+      trainingsData[user.user_id] = userTrainings;
     }
 
     return {
