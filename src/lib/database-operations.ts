@@ -1,13 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import {
-  TrainingInsert,
-  TrainingUpdate,
-  ExerciseInsert,
-  ExerciseUpdate,
-  RoundInsert,
-  RoundUpdate,
-  CreateExerciseForm,
-  CreateRoundForm,
+  type TrainingInsert,
+  type TrainingUpdate,
+  type ExerciseInsert,
+  type ExerciseUpdate,
+  type RoundInsert,
+  type RoundUpdate,
+  type CreateExerciseForm,
+  type CreateRoundForm,
   trainingInsertSchema,
   exerciseInsertSchema,
   roundInsertSchema,
@@ -17,7 +17,7 @@ import {
 type DatabaseTraining = {
   id: string;
   user_id: string;
-  status: "plan" | "done";
+  status: "plan" | "active" | "done";
   comments: string | null;
   created_at: string;
   updated_at: string;
@@ -105,7 +105,7 @@ export async function updateTraining(
 
 export async function updateTrainingStatus(
   id: string,
-  status: "plan" | "done",
+  status: "plan" | "active" | "done",
 ): Promise<DatabaseTraining> {
   const { data, error } = await supabase
     .from("trainings")

@@ -1,10 +1,11 @@
 import { supabase } from "@/lib/supabase";
-import { Round } from "@/schemas/database";
+import type { Round } from "@/schemas/database";
 
 export interface AdminStats {
   totalUsers: number;
   totalTrainings: number;
   totalPlans: number;
+  totalActive: number;
   totalDone: number;
   recentActivity: Array<{
     id: string;
@@ -32,6 +33,12 @@ export async function fetchAdminStats(): Promise<AdminStats> {
       .select("*", { count: "exact", head: true })
       .eq("status", "plan");
 
+    // Get active trainings count
+    const { count: totalActive } = await supabase
+      .from("trainings")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active");
+
     // Get done trainings count
     const { count: totalDone } = await supabase
       .from("trainings")
@@ -46,18 +53,34 @@ export async function fetchAdminStats(): Promise<AdminStats> {
       .limit(10);
 
     const recentActivity =
-      recentTrainings?.map((training) => ({
-        id: training.id,
-        type:
-          training.status === "done" ? "workout_completed" : "workout_planned",
-        description: `User ${training.status === "done" ? "completed" : "planned"} a workout`,
-        timestamp: training.created_at,
-      })) || [];
+      recentTrainings?.map((training) => {
+        let type: string;
+        let description: string;
+
+        if (training.status === "done") {
+          type = "workout_completed";
+          description = "User completed a workout";
+        } else if (training.status === "active") {
+          type = "workout_active";
+          description = "User activated a workout";
+        } else {
+          type = "workout_planned";
+          description = "User planned a workout";
+        }
+
+        return {
+          id: training.id,
+          type,
+          description,
+          timestamp: training.created_at,
+        };
+      }) || [];
 
     return {
       totalUsers: totalUsers || 0,
       totalTrainings: totalTrainings || 0,
       totalPlans: totalPlans || 0,
+      totalActive: totalActive || 0,
       totalDone: totalDone || 0,
       recentActivity,
     };

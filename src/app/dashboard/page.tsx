@@ -38,12 +38,30 @@ export default function Dashboard() {
     try {
       setPlansLoading(true);
       const allTrainings = await getUserTrainings(user.id);
-      const planTrainings = allTrainings
-        .filter((training) => training.status === "plan")
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      const sortedTrainings = allTrainings.sort((a, b) => {
+        // Status priority: active first, then plan, then done
+        const statusPriority = { active: 0, plan: 1, done: 2 };
+        const aPriority =
+          statusPriority[a.status as keyof typeof statusPriority];
+        const bPriority =
+          statusPriority[b.status as keyof typeof statusPriority];
+
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority;
+        }
+
+        // Within same status, sort by created_at descending
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
+      });
+
+      // Only show active and plan trainings in dashboard
+      const planTrainings = sortedTrainings.filter(
+        (training) =>
+          training.status === "active" || training.status === "plan",
+      );
+
       setPlans(planTrainings);
     } catch (err) {
       console.error("Failed to fetch plans:", err);

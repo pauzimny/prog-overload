@@ -34,11 +34,37 @@ export function useTrainingOperations() {
     }
   };
 
+  const setTrainingAsActive = async (trainingId: string) => {
+    try {
+      await updateTrainingStatus(trainingId, "active");
+      toast({
+        message: "Training marked as active!",
+        type: "success",
+      });
+      return true; // Indicate success
+    } catch (err: any) {
+      console.error("Failed to set training as active: ", err);
+      toast({
+        message: "Failed to set training as active",
+        type: "error",
+      });
+      return false; // Indicate failure
+    }
+  };
+
   const toggleTrainingStatus = async (
     trainingId: string,
-    currentStatus: "plan" | "done",
+    currentStatus: "plan" | "active" | "done",
   ) => {
-    const newStatus = currentStatus === "plan" ? "done" : "plan";
+    let newStatus: "plan" | "active" | "done";
+
+    if (currentStatus === "plan") {
+      newStatus = "active";
+    } else if (currentStatus === "active") {
+      newStatus = "done";
+    } else {
+      newStatus = "plan";
+    }
 
     try {
       await updateTrainingStatus(trainingId, newStatus);
@@ -138,6 +164,7 @@ export function useTrainingOperations() {
     copyTrainingToClipboard: handleCopyTraining,
     copyUserIdToClipboard,
     toggleTrainingStatus,
+    setTrainingAsActive,
     deleteTraining,
     setTrainingAsDone,
     toggleRoundDoneStatus,

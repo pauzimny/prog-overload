@@ -57,7 +57,7 @@ export const exerciseUpdateSchema = exerciseSchema.partial().omit({
 export const trainingSchema = z.object({
   id: uuidSchema.optional(),
   user_id: uuidSchema,
-  status: z.enum(["plan", "done"]).default("plan"),
+  status: z.enum(["plan", "active", "done"]).default("plan"),
   comments: z.string().nullable().optional(),
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
@@ -72,7 +72,7 @@ export const trainingInsertSchema = trainingSchema
     exercises: true,
   })
   .extend({
-    status: z.enum(["plan", "done"]).default("plan").optional(),
+    status: z.enum(["plan", "active", "done"]).default("plan").optional(),
   });
 export const trainingUpdateSchema = trainingSchema.partial().omit({
   id: true,

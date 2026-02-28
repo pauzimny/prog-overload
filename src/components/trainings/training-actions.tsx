@@ -59,6 +59,47 @@ export const TrainingActions = ({
           </div>
         </div>
       )}
+      {training.status === "active" && (
+        <div className="flex gap-4 pb-2">
+          <Button
+            // variant="default"
+            size="xs"
+            onClick={() => onStartWorkout(training)}
+            title="Continue this workout"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Continue
+          </Button>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => onSetAsDone(training)}
+            title="Mark this training as done"
+          >
+            {/* <Check className="h-4 w-4 mr-2" /> */}
+            Set as Done
+          </Button>
+
+          <div className="flex gap-2 justify-end w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCopyTraining(training)}
+              title="Copy training summary to clipboard"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDeleteTraining(training.id!)}
+              title="Delete this workout"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

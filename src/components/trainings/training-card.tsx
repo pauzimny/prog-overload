@@ -2,11 +2,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
 
-import { Calendar, Clock, CheckCircle, Circle } from "lucide-react";
+import { Calendar, Clock, CheckCircle, Circle, Play } from "lucide-react";
 import { format } from "date-fns";
 import { ExerciseItem } from "./excercise-item";
 import { TrainingActions } from "./training-actions";
-import { Exercise, TrainingWithExercises } from "@/schemas/database";
+import type { Exercise, TrainingWithExercises } from "@/schemas/database";
 
 interface TrainingCardProps {
   training: TrainingWithExercises;
@@ -14,7 +14,10 @@ interface TrainingCardProps {
   onSetAsDone: (training?: TrainingWithExercises) => void;
   onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
-  onToggleStatus: (trainingId: string, currentStatus: "plan" | "done") => void;
+  onToggleStatus: (
+    trainingId: string,
+    currentStatus: "plan" | "active" | "done",
+  ) => void;
   onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
 }
 
@@ -47,16 +50,30 @@ export default function TrainingCard({
             </div>
             <div className="flex items-center gap-2">
               <Badge
-                variant={training.status === "done" ? "default" : "secondary"}
+                variant={
+                  training.status === "done"
+                    ? "default"
+                    : training.status === "active"
+                      ? "default"
+                      : "secondary"
+                }
                 className="cursor-pointer"
-                onClick={() => onToggleStatus(training.id!, training.status)}
+                onClick={() =>
+                  training.id && onToggleStatus(training.id, training.status)
+                }
               >
                 {training.status === "done" ? (
                   <CheckCircle className="h-3 w-3 mr-1" />
+                ) : training.status === "active" ? (
+                  <Play className="h-3 w-3 mr-1" />
                 ) : (
                   <Circle className="h-3 w-3 mr-1" />
                 )}
-                {training.status === "done" ? "Done" : "Plan"}
+                {training.status === "done"
+                  ? "Done"
+                  : training.status === "active"
+                    ? "Active"
+                    : "Plan"}
               </Badge>
               <Badge variant="secondary">
                 {training.exercises.length}{" "}

@@ -27,6 +27,7 @@ export default function TrainingsPage() {
     copyTrainingToClipboard,
     copyUserIdToClipboard,
     toggleTrainingStatus,
+    setTrainingAsActive,
     deleteTraining,
     setTrainingAsDone,
     toggleRoundDoneStatus,
@@ -39,7 +40,24 @@ export default function TrainingsPage() {
       setLoading(true);
       setError(null);
       const data = await getUserTrainings(user.id);
-      setTrainings(data);
+      const sortedData = data.sort((a, b) => {
+        // Status priority: active first, then plan, then done
+        const statusPriority = { active: 0, plan: 1, done: 2 };
+        const aPriority =
+          statusPriority[a.status as keyof typeof statusPriority];
+        const bPriority =
+          statusPriority[b.status as keyof typeof statusPriority];
+
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority;
+        }
+
+        // Within same status, sort by created_at descending
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+      setTrainings(sortedData);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -51,13 +69,17 @@ export default function TrainingsPage() {
     fetchTrainings();
   }, [fetchTrainings]);
 
-  const handleCreateSuccess = () => {
-    setIsCreateFormOpen(false);
-    fetchTrainings();
-  };
+  // const handleCreateSuccess = () => {
+  //   setIsCreateFormOpen(false);
+  //   fetchTrainings();
+  // };
 
-  const startWorkout = (training: TrainingWithExercises) => {
+  const startWorkout = async (training: TrainingWithExercises) => {
+    if (training.status !== "active") {
+      await setTrainingAsActive(training.id as string);
+    }
     setActiveWorkout(training);
+    fetchTrainings(); // Refresh to show updated status
   };
 
   const completeWorkout = () => {
@@ -67,7 +89,7 @@ export default function TrainingsPage() {
 
   const handleToggleStatus = async (
     trainingId: string,
-    currentStatus: "plan" | "done",
+    currentStatus: "plan" | "active" | "done",
   ) => {
     const success = await toggleTrainingStatus(trainingId, currentStatus);
     if (success) {
