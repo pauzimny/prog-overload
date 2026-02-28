@@ -27,6 +27,7 @@ type DatabaseExercise = {
   id: string;
   training_id: string;
   name: string;
+  active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -192,6 +193,21 @@ export async function updateExercise(
   return data as DatabaseExercise;
 }
 
+export async function updateExerciseActiveStatus(
+  id: string,
+  active: boolean,
+): Promise<DatabaseExercise> {
+  const { data, error } = await supabase
+    .from("exercises")
+    .update({ active })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DatabaseExercise;
+}
+
 export async function deleteExercise(id: string): Promise<void> {
   const { error } = await supabase.from("exercises").delete().eq("id", id);
 
@@ -262,6 +278,7 @@ export async function createTrainingWithExercises(
       const exerciseWithTrainingId = {
         name: exercise.name,
         training_id: createdTraining.id,
+        active: false, // Default to false when creating
       };
       const createdExercise = await createExercise(exerciseWithTrainingId);
 

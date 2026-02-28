@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import {
   updateTrainingStatus,
   updateRoundDoneStatus,
+  updateExerciseActiveStatus,
 } from "@/lib/database-operations";
 import { copyTrainingToClipboard } from "@/lib/training-utils";
 import { TrainingWithExercises } from "@/schemas/database";
@@ -158,6 +159,27 @@ export function useTrainingOperations() {
     return false;
   };
 
+  const toggleExerciseActiveStatus = async (
+    exerciseId: string,
+    currentActive: boolean,
+  ) => {
+    try {
+      await updateExerciseActiveStatus(exerciseId, !currentActive);
+      toast({
+        message: `Exercise marked as ${!currentActive ? "active" : "inactive"}!`,
+        type: "success",
+      });
+      return true; // Indicate success
+    } catch (err: any) {
+      console.error("Failed to update exercise active status: ", err);
+      toast({
+        message: "Failed to update exercise active status",
+        type: "error",
+      });
+      return false; // Indicate failure
+    }
+  };
+
   const toggleRoundDoneStatus = async (
     roundId: string,
     currentDone: boolean,
@@ -187,6 +209,7 @@ export function useTrainingOperations() {
     setTrainingAsActive,
     deleteTraining,
     setTrainingAsDone,
+    toggleExerciseActiveStatus,
     toggleRoundDoneStatus,
   };
 }

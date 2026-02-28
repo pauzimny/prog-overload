@@ -18,7 +18,11 @@ import {
   Circle,
 } from "lucide-react";
 import { TrainingWithExercises } from "@/schemas/database";
-import { updateTrainingStatus, updateRound } from "@/lib/database-operations";
+import {
+  updateTrainingStatus,
+  updateRound,
+  updateExercise,
+} from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "./ui/textarea";
 
@@ -33,7 +37,11 @@ export default function WorkoutTimer({
 }: WorkoutTimerProps) {
   const [isRunning, setIsRunning] = useState(true); // Auto-start
   // const [seconds, setSeconds] = useState(0);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(() => {
+    // Find the first active exercise, default to first exercise if none active
+    const activeExerciseIndex = training.exercises.findIndex((ex) => ex.active);
+    return activeExerciseIndex >= 0 ? activeExerciseIndex : 0;
+  });
   // const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [editedTraining, setEditedTraining] = useState(() => {
     // Ensure all rounds have done field with default false and maintain original order
@@ -89,6 +97,30 @@ export default function WorkoutTimer({
 
   const handleStartPause = () => {
     setIsRunning(!isRunning);
+  };
+
+  const handleExerciseChange = async (exerciseIndex: number) => {
+    try {
+      const newExercise = editedTraining.exercises[exerciseIndex];
+
+      // Set all exercises to inactive
+      for (const exercise of editedTraining.exercises) {
+        if (exercise.id) {
+          await updateExercise(exercise.id, { active: false });
+        }
+      }
+
+      // Set selected exercise as active
+      if (newExercise.id) {
+        await updateExercise(newExercise.id, { active: true });
+      }
+
+      setCurrentExerciseIndex(exerciseIndex);
+      toast({ message: "Switched to exercise", type: "success" });
+    } catch (error) {
+      console.error("Failed to switch exercise:", error);
+      toast({ message: "Failed to switch exercise", type: "error" });
+    }
   };
 
   const handleComplete = async () => {
@@ -236,10 +268,15 @@ export default function WorkoutTimer({
                 key={`exercise-${exercise.id}`}
                 variant={index === currentExerciseIndex ? "default" : "outline"}
                 className="w-full justify-start"
-                onClick={() => setCurrentExerciseIndex(index)}
+                onClick={() => handleExerciseChange(index)}
               >
                 <Dumbbell className="h-4 w-4 mr-2" />
                 {exercise.name}
+                {exercise.active && (
+                  <Badge variant="secondary" className="ml-auto">
+                    Active
+                  </Badge>
+                )}
               </Button>
             ))}
           </div>

@@ -35,6 +35,7 @@ export const exerciseSchema = z.object({
     .string()
     .min(1, "Exercise name is required")
     .max(100, "Exercise name too long"),
+  active: z.boolean().default(false),
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
   rounds: z.array(roundSchema).optional(),
