@@ -62,13 +62,22 @@ export default function Dashboard() {
           training.status === "active" || training.status === "plan",
       );
 
+      // Check if user has active workout and redirect to trainings page
+      const activeTraining = sortedTrainings.find(
+        (training) => training.status === "active",
+      );
+      if (activeTraining) {
+        router.push("/trainings");
+        return;
+      }
+
       setPlans(planTrainings);
     } catch (err) {
       console.error("Failed to fetch plans:", err);
     } finally {
       setPlansLoading(false);
     }
-  }, [user]);
+  }, [user, router]);
 
   // todo: replace with useQuery
   useEffect(() => {

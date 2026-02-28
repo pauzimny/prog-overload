@@ -58,6 +58,14 @@ export default function TrainingsPage() {
         );
       });
       setTrainings(sortedData);
+
+      // Automatically set active workout if there's an active training
+      const activeTraining = sortedData.find(
+        (training) => training.status === "active",
+      );
+      if (activeTraining) {
+        setActiveWorkout(activeTraining);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
