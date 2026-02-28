@@ -36,15 +36,21 @@ export default function WorkoutTimer({
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   // const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [editedTraining, setEditedTraining] = useState(() => {
-    // Ensure all rounds have done field with default false
+    // Ensure all rounds have done field with default false and maintain original order
     return {
       ...training,
       exercises: training.exercises.map((exercise) => ({
         ...exercise,
-        rounds: exercise.rounds.map((round) => ({
-          ...round,
-          done: round.done || false, // Default to false if undefined
-        })),
+        rounds: exercise.rounds
+          .map((round) => ({
+            ...round,
+            done: round.done || false, // Default to false if undefined
+          }))
+          .sort(
+            (a, b) =>
+              new Date(a.created_at || 0).getTime() -
+              new Date(b.created_at || 0).getTime(),
+          ),
       })),
     };
   });
@@ -88,8 +94,16 @@ export default function WorkoutTimer({
   const handleComplete = async () => {
     try {
       // Update all rounds with edited values including done status
+      // Process rounds in their original order to maintain consistency
       for (const exercise of editedTraining.exercises) {
-        for (const round of exercise.rounds) {
+        // Sort rounds by created_at to ensure we update them in original order
+        const sortedRounds = exercise.rounds.sort(
+          (a, b) =>
+            new Date(a.created_at || 0).getTime() -
+            new Date(b.created_at || 0).getTime(),
+        );
+
+        for (const round of sortedRounds) {
           await updateRound(round.id!, {
             weight: round.weight,
             reps: round.reps,

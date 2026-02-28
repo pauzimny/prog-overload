@@ -34,6 +34,24 @@ export function useTrainingOperations() {
     }
   };
 
+  const setTrainingAsPlan = async (trainingId: string) => {
+    try {
+      await updateTrainingStatus(trainingId, "plan");
+      toast({
+        message: "Training marked as plan!",
+        type: "success",
+      });
+      return true; // Indicate success
+    } catch (err: any) {
+      console.error("Failed to set training as plan: ", err);
+      toast({
+        message: "Failed to set training as plan",
+        type: "error",
+      });
+      return false; // Indicate failure
+    }
+  };
+
   const setTrainingAsActive = async (trainingId: string) => {
     try {
       await updateTrainingStatus(trainingId, "active");
@@ -63,7 +81,8 @@ export function useTrainingOperations() {
     } else if (currentStatus === "active") {
       newStatus = "done";
     } else {
-      newStatus = "plan";
+      // done -> active (reactivate completed workout)
+      newStatus = "active";
     }
 
     try {
@@ -164,6 +183,7 @@ export function useTrainingOperations() {
     copyTrainingToClipboard: handleCopyTraining,
     copyUserIdToClipboard,
     toggleTrainingStatus,
+    setTrainingAsPlan,
     setTrainingAsActive,
     deleteTraining,
     setTrainingAsDone,

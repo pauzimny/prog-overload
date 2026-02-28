@@ -71,22 +71,39 @@ export async function getUserTrainings(
 
   if (error) throw error;
 
+  if (!data) return [];
+
+  // Sort exercises and rounds to maintain original order
   const sortedData = data.map((training: TrainingWithExercises) => ({
     ...training,
     exercises: training.exercises
       .map((exercise: DatabaseExercise & { rounds: DatabaseRound[] }) => ({
         ...exercise,
-        rounds: exercise.rounds.sort(
-          (a: DatabaseRound, b: DatabaseRound) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        ),
+        rounds: exercise.rounds.sort((a: DatabaseRound, b: DatabaseRound) => {
+          // Primary sort by created_at, secondary by id for stability
+          const aTime = new Date(a.created_at).getTime();
+          const bTime = new Date(b.created_at).getTime();
+          if (aTime !== bTime) {
+            return aTime - bTime;
+          }
+          // If timestamps are the same (unlikely but possible), sort by id
+          return a.id.localeCompare(b.id);
+        }),
       }))
       .sort(
         (
           a: DatabaseExercise & { rounds: DatabaseRound[] },
           b: DatabaseExercise & { rounds: DatabaseRound[] },
-        ) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        ) => {
+          // Primary sort by created_at, secondary by id for stability
+          const aTime = new Date(a.created_at).getTime();
+          const bTime = new Date(b.created_at).getTime();
+          if (aTime !== bTime) {
+            return aTime - bTime;
+          }
+          // If timestamps are the same, sort by id
+          return a.id.localeCompare(b.id);
+        },
       ),
   }));
 
