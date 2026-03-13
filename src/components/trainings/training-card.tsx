@@ -57,7 +57,13 @@ export default function TrainingCard({
                       ? "default"
                       : "secondary"
                 }
-                className="cursor-pointer"
+                className={`cursor-pointer transition-all duration-200 ${
+                  training.status === "done"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                    : training.status === "active"
+                      ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                }`}
                 onClick={() =>
                   training.id && onToggleStatus(training.id, training.status)
                 }

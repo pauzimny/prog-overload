@@ -295,106 +295,127 @@ export default function WorkoutTimer({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {currentExercise?.rounds.map((round, roundIndex) => (
-            <div key={round.id} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      toggleRoundDone(currentExerciseIndex, roundIndex)
-                    }
-                    className="p-1 h-6 w-6"
-                    title={
-                      round.done === true
-                        ? "Mark as not done"
-                        : round.done === false
-                          ? "Mark as done"
-                          : "Mark as done"
-                    }
-                  >
-                    {round.done === true ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                  <Badge variant="secondary">Round {roundIndex + 1}</Badge>
+          {currentExercise?.rounds.map((round, roundIndex) => {
+            const isDone = round.done === true;
+            return (
+              <div
+                key={round.id}
+                className={`space-y-3 p-3 rounded-lg border transition-all duration-200 ${
+                  isDone
+                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 dark:from-emerald-950/20 dark:to-teal-950/20 dark:border-emerald-800"
+                    : "bg-background border-border"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        toggleRoundDone(currentExerciseIndex, roundIndex)
+                      }
+                      className={`p-1 h-6 w-6 transition-all duration-200 ${
+                        isDone
+                          ? "hover:bg-emerald-200 dark:hover:bg-emerald-800"
+                          : "hover:bg-muted"
+                      }`}
+                      title={isDone ? "Mark as not done" : "Mark as done"}
+                    >
+                      {isDone ? (
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                    <Badge
+                      variant={isDone ? "default" : "secondary"}
+                      className={`transition-all duration-200 ${
+                        isDone
+                          ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                          : ""
+                      }`}
+                    >
+                      Round {roundIndex + 1}
+                    </Badge>
+                  </div>
+                  {currentExercise.rounds.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        removeRound(currentExerciseIndex, roundIndex)
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                {currentExercise.rounds.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      removeRound(currentExerciseIndex, roundIndex)
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+
+                <div
+                  className={`grid grid-cols-2 gap-4 transition-all duration-200 ${
+                    isDone ? "opacity-75" : ""
+                  }`}
+                >
+                  <div>
+                    <Label htmlFor={`weight-${roundIndex}`}>Weight (kg)</Label>
+                    <Input
+                      id={`weight-${roundIndex}`}
+                      type="number"
+                      step="0.5"
+                      value={round.weight ?? ""}
+                      min="0"
+                      onChange={(e) => {
+                        updateRoundData(
+                          currentExerciseIndex,
+                          roundIndex,
+                          "weight",
+                          Number.isNaN(e.target.valueAsNumber)
+                            ? ""
+                            : e.target.valueAsNumber,
+                        );
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`reps-${roundIndex}`}>Reps</Label>
+                    <Input
+                      id={`reps-${roundIndex}`}
+                      type="number"
+                      value={round.reps}
+                      min="0"
+                      onChange={(e) => {
+                        updateRoundData(
+                          currentExerciseIndex,
+                          roundIndex,
+                          "reps",
+                          Number.isNaN(e.target.valueAsNumber)
+                            ? ""
+                            : e.target.valueAsNumber,
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
+                <Textarea
+                  id={`comments-${roundIndex}`}
+                  placeholder="Optional notes about this round"
+                  value={round.comments || ""}
+                  onChange={(e) =>
+                    updateRoundData(
+                      currentExerciseIndex,
+                      roundIndex,
+                      "comments",
+                      e.target.value,
+                    )
+                  }
+                />
+
+                {roundIndex < currentExercise.rounds.length - 1 && (
+                  <Separator />
                 )}
               </div>
-
-              <div
-                className={`grid grid-cols-2 gap-4 ${round.done === true ? "opacity-60" : ""}`}
-              >
-                <div>
-                  <Label htmlFor={`weight-${roundIndex}`}>Weight (kg)</Label>
-                  <Input
-                    id={`weight-${roundIndex}`}
-                    type="number"
-                    step="0.5"
-                    value={round.weight ?? ""}
-                    min="0"
-                    onChange={(e) => {
-                      updateRoundData(
-                        currentExerciseIndex,
-                        roundIndex,
-                        "weight",
-                        Number.isNaN(e.target.valueAsNumber)
-                          ? ""
-                          : e.target.valueAsNumber,
-                      );
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`reps-${roundIndex}`}>Reps</Label>
-                  <Input
-                    id={`reps-${roundIndex}`}
-                    type="number"
-                    value={round.reps}
-                    min="0"
-                    onChange={(e) => {
-                      updateRoundData(
-                        currentExerciseIndex,
-                        roundIndex,
-                        "reps",
-                        Number.isNaN(e.target.valueAsNumber)
-                          ? ""
-                          : e.target.valueAsNumber,
-                      );
-                    }}
-                  />
-                </div>
-              </div>
-              <Textarea
-                id={`comments-${roundIndex}`}
-                placeholder="Optional notes about this round"
-                value={round.comments || ""}
-                onChange={(e) =>
-                  updateRoundData(
-                    currentExerciseIndex,
-                    roundIndex,
-                    "comments",
-                    e.target.value,
-                  )
-                }
-              />
-
-              {roundIndex < currentExercise.rounds.length - 1 && <Separator />}
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
     </div>
