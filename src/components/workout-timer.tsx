@@ -225,6 +225,27 @@ export default function WorkoutTimer({
     }
   };
 
+  const saveRound = async (exerciseIndex: number, roundIndex: number) => {
+    const round = editedTraining.exercises[exerciseIndex].rounds[roundIndex];
+
+    try {
+      await updateRound(round.id!, {
+        weight: round.weight,
+        reps: round.reps,
+        comments: round.comments,
+        done: round.done,
+      });
+
+      toast({
+        message: `Round ${roundIndex + 1} saved successfully!`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to save round:", error);
+      toast({ message: "Failed to save round", type: "error" });
+    }
+  };
+
   const currentExercise = editedTraining.exercises[currentExerciseIndex];
 
   return (
@@ -349,6 +370,18 @@ export default function WorkoutTimer({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => saveRound(currentExerciseIndex, roundIndex)}
+                    className={`transition-all duration-200 ${
+                      isDone
+                        ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300"
+                        : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Save
+                  </Button>
                 </div>
 
                 <div
