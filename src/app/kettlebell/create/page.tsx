@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Dumbbell, Plus, Trash2 } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
 import { useAuth } from "@/contexts/auth-context";
@@ -44,6 +45,7 @@ const defaultRound = (): FormRound => ({
 
 export default function CreateKettlebellTrainingPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const { toasts, toast, removeToast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -180,6 +182,7 @@ export default function CreateKettlebellTrainingPage() {
         type: "success",
       });
       resetForm();
+      router.push("/kettlebell?created=1");
     } catch (error: any) {
       toast({
         message: error?.message || "Failed to create kettlebell training.",
