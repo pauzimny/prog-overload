@@ -178,12 +178,13 @@ export async function uploadTraining(
       if (exerciseError) throw exerciseError;
 
       if (exercise.rounds && Array.isArray(exercise.rounds)) {
-        const roundsToInsert = exercise.rounds.map((round: Round) => ({
+        const baseRoundTime = Date.now();
+        const roundsToInsert = exercise.rounds.map((round: Round, index: number) => ({
           exercise_id: createdExercise.id,
           weight: round.weight || 0,
           reps: round.reps || 0,
           comments: round.comments || null,
-          created_at: new Date().toISOString(),
+          created_at: new Date(baseRoundTime + index).toISOString(),
         }));
 
         const { error: roundsError } = await supabase
