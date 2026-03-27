@@ -2,23 +2,24 @@ import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
 
-export const kettlebellRoundSchema = z
-  .object({
-    id: uuidSchema.optional(),
-    exercise_id: uuidSchema,
-    weight: z.number().min(0, "Weight cannot be negative"),
-    reps: z.number().int().positive("Reps must be a positive integer").optional(),
-    time_minutes: z
-      .number()
-      .int()
-      .positive("Time must be a positive number of minutes")
-      .optional(),
-    comments: z.string().nullable().optional(),
-    completed: z.boolean().default(false),
-    created_at: z.string().datetime().optional(),
-  })
-  .refine(
-    (data) => {
+const kettlebellRoundBaseSchema = z.object({
+  id: uuidSchema.optional(),
+  exercise_id: uuidSchema,
+  weight: z.number().min(0, "Weight cannot be negative"),
+  reps: z.number().int().positive("Reps must be a positive integer").optional(),
+  time_minutes: z
+    .number()
+    .int()
+    .positive("Time must be a positive number of minutes")
+    .optional(),
+  comments: z.string().nullable().optional(),
+  completed: z.boolean().default(false),
+  created_at: z.string().datetime().optional(),
+});
+
+const withRoundMetricValidation = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.refine(
+    (data: any) => {
       const hasReps = typeof data.reps === "number";
       const hasTime = typeof data.time_minutes === "number";
       return Number(hasReps) + Number(hasTime) === 1;
@@ -29,14 +30,20 @@ export const kettlebellRoundSchema = z
     },
   );
 
-export const kettlebellRoundInsertSchema = kettlebellRoundSchema.omit({
-  id: true,
-  created_at: true,
-});
+export const kettlebellRoundSchema = withRoundMetricValidation(
+  kettlebellRoundBaseSchema,
+);
 
-export const kettlebellRoundUpdateSchema = kettlebellRoundSchema
-  .partial()
-  .omit({ id: true, created_at: true });
+export const kettlebellRoundInsertSchema = withRoundMetricValidation(
+  kettlebellRoundBaseSchema.omit({
+    id: true,
+    created_at: true,
+  }),
+);
+
+export const kettlebellRoundUpdateSchema = kettlebellRoundBaseSchema
+  .omit({ id: true, created_at: true })
+  .partial();
 
 export const kettlebellExerciseSchema = z.object({
   id: uuidSchema.optional(),
