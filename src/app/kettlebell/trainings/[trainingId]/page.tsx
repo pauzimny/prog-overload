@@ -8,20 +8,33 @@ import ProtectedRoute from "@/components/protected-route";
 import { useAuth } from "@/contexts/auth-context";
 import {
   getUserKettlebellTrainings,
+  updateKettlebellRound,
+  updateKettlebellTraining,
   type KettlebellTrainingWithExercises,
 } from "@/lib/kettlebell-operations";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { ToastContainer } from "@/components/ui/toast";
+import { TrainingHeaderCard } from "@/components/kettlebell/training-header-card";
+import { ExerciseSessionCard } from "@/components/kettlebell/exercise-session-card";
+
+type KettlebellExercise =
+  KettlebellTrainingWithExercises["kettlebell_exercises"][number];
+type KettlebellRound = KettlebellExercise["kettlebell_rounds"][number];
 
 export default function KettlebellTrainingPage() {
   const params = useParams<{ trainingId: string }>();
   const trainingId = params?.trainingId;
   const { user } = useAuth();
+  const { toasts, toast, removeToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState<KettlebellTrainingWithExercises | null>(
     null,
   );
+  const [savingRoundIds, setSavingRoundIds] = useState<Set<string>>(new Set());
+  const [savingTrainingStatus, setSavingTrainingStatus] = useState(false);
 
   useEffect(() => {
     const loadTraining = async () => {
@@ -41,6 +54,130 @@ export default function KettlebellTrainingPage() {
 
     loadTraining();
   }, [user, trainingId]);
+
+  const updateRoundInState = (
+    roundId: string,
+    updater: (round: KettlebellRound) => KettlebellRound,
+  ) => {
+    setTraining((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        kettlebell_exercises: prev.kettlebell_exercises.map((exercise) => ({
+          ...exercise,
+          kettlebell_rounds: exercise.kettlebell_rounds.map((round) =>
+            round.id === roundId ? updater(round) : round,
+          ),
+        })),
+      };
+    });
+  };
+
+  const handleToggleRoundCompleted = async (
+    roundId: string,
+    currentCompleted: boolean,
+  ) => {
+    try {
+      setSavingRoundIds((prev) => new Set(prev).add(roundId));
+
+      updateRoundInState(roundId, (round) => ({
+        ...round,
+        completed: !currentCompleted,
+      }));
+
+      await updateKettlebellRound(roundId, {
+        completed: !currentCompleted,
+      });
+    } catch (error) {
+      updateRoundInState(roundId, (round) => ({
+        ...round,
+        completed: currentCompleted,
+      }));
+      toast({
+        message: "Failed to update round completion.",
+        type: "error",
+      });
+    } finally {
+      setSavingRoundIds((prev) => {
+        const next = new Set(prev);
+        next.delete(roundId);
+        return next;
+      });
+    }
+  };
+
+  const handleSaveRound = async (roundId: string) => {
+    if (!training) return;
+
+    const round = training.kettlebell_exercises
+      .flatMap((exercise) => exercise.kettlebell_rounds)
+      .find((item) => item.id === roundId);
+
+    if (!round) return;
+
+    if ((round.reps == null && round.time_minutes == null) || (round.reps != null && round.time_minutes != null)) {
+      toast({
+        message: "Round must contain either reps or time.",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      setSavingRoundIds((prev) => new Set(prev).add(roundId));
+
+      await updateKettlebellRound(roundId, {
+        weight: round.weight,
+        reps: round.reps ?? undefined,
+        time_minutes: round.time_minutes ?? undefined,
+        comments: round.comments ?? null,
+        completed: round.completed,
+      });
+
+      toast({ message: "Round updated.", type: "success" });
+    } catch (error) {
+      toast({ message: "Failed to save round changes.", type: "error" });
+    } finally {
+      setSavingRoundIds((prev) => {
+        const next = new Set(prev);
+        next.delete(roundId);
+        return next;
+      });
+    }
+  };
+
+  const handleToggleTrainingCompleted = async () => {
+    if (!training) return;
+
+    try {
+      setSavingTrainingStatus(true);
+      const nextCompleted = !training.completed;
+
+      setTraining((prev) =>
+        prev ? { ...prev, completed: nextCompleted } : prev,
+      );
+
+      await updateKettlebellTraining(training.id, { completed: nextCompleted });
+
+      toast({
+        message: nextCompleted
+          ? "Training marked as completed."
+          : "Training marked as active plan.",
+        type: "success",
+      });
+    } catch (error) {
+      setTraining((prev) =>
+        prev ? { ...prev, completed: !prev.completed } : prev,
+      );
+      toast({
+        message: "Failed to update training status.",
+        type: "error",
+      });
+    } finally {
+      setSavingTrainingStatus(false);
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -68,48 +205,26 @@ export default function KettlebellTrainingPage() {
               </Card>
             ) : (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{training.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <p className="text-muted-foreground">
-                      Created: {new Date(training.created_at).toLocaleString()}
-                    </p>
-                    {training.comments && <p>{training.comments}</p>}
-                  </CardContent>
-                </Card>
+                <TrainingHeaderCard
+                  training={training}
+                  savingTrainingStatus={savingTrainingStatus}
+                  onToggleTrainingCompleted={handleToggleTrainingCompleted}
+                />
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Exercises</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {training.kettlebell_exercises.map((exercise, exerciseIndex) => (
-                      <div key={exercise.id} className="border rounded-md p-3 space-y-2">
-                        <div className="font-medium">
-                          {exerciseIndex + 1}. {exercise.name}
-                        </div>
-                        <div className="space-y-1">
-                          {exercise.kettlebell_rounds.map((round, roundIndex) => (
-                            <div
-                              key={round.id}
-                              className="text-sm text-muted-foreground"
-                            >
-                              Round {roundIndex + 1}: {round.weight}kg •{" "}
-                              {round.reps ? `${round.reps} reps` : `${round.time_minutes} min`}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                <ExerciseSessionCard
+                  exercises={training.kettlebell_exercises}
+                  savingRoundIds={savingRoundIds}
+                  onToggleRoundCompleted={handleToggleRoundCompleted}
+                  onSaveRound={handleSaveRound}
+                  onUpdateRound={updateRoundInState}
+                />
               </>
             )}
           </div>
         </div>
       </div>
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );
 }
