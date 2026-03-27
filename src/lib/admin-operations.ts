@@ -46,12 +46,12 @@ export async function fetchAdminStats(): Promise<AdminStats> {
       .select("*", { count: "exact", head: true })
       .eq("status", "done");
 
-    // Get recent activity (last 10 trainings)
+    // Get recent activity (last 3 trainings)
     const { data: recentTrainings } = await supabase
       .from("trainings")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(3);
 
     const recentActivity =
       recentTrainings?.map((training) => {
