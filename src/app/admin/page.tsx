@@ -7,10 +7,8 @@ import ProtectedRoute from "@/components/protected-route";
 import { isAdmin } from "@/lib/admin";
 import {
   fetchAdminStats,
-  deleteTraining,
   uploadTraining,
   fetchUsersWithTrainings,
-  refreshUserTrainings,
   type AdminStats,
 } from "@/lib/admin-operations";
 import AdminStatsComponent from "@/components/admin/admin-stats";
@@ -42,7 +40,6 @@ export default function AdminPage() {
   const [userTrainings, setUserTrainings] = useState<{ [key: string]: any[] }>(
     {},
   );
-  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -53,46 +50,6 @@ export default function AdminPage() {
       console.error("Failed to fetch users:", err);
     }
   }, []);
-
-  const toggleUserExpanded = (userId: string) => {
-    const newExpanded = new Set(expandedUsers);
-    if (newExpanded.has(userId)) {
-      newExpanded.delete(userId);
-    } else {
-      newExpanded.add(userId);
-    }
-    setExpandedUsers(newExpanded);
-  };
-
-  const handleDeleteTraining = async (trainingId: string, userId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this training? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await deleteTraining(trainingId, userId);
-
-      // Refresh trainings for this user
-      const updatedTrainings = await refreshUserTrainings(userId);
-      setUserTrainings((prev) => ({
-        ...prev,
-        [userId]: updatedTrainings,
-      }));
-
-      // Refresh stats
-      const updatedStats = await fetchAdminStatsData();
-      setStats(updatedStats);
-
-      alert("Training deleted successfully!");
-    } catch (error) {
-      console.error("Failed to delete training:", error);
-      alert("Failed to delete training. Please try again.");
-    }
-  };
 
   const handleUploadTraining = async () => {
     if (!selectedUserId || !uploadJson) {
@@ -171,7 +128,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
           <div className="container mx-auto px-4 pb-20 pt-4 py-20">
             <div className="flex items-center justify-center">
               <div className="text-center">
@@ -190,7 +147,7 @@ export default function AdminPage() {
   if (error || !isAdminUser) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
           <div className="container mx-auto px-4 pb-20 pt-4 py-20">
             <div className="text-center">
               <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -207,7 +164,7 @@ export default function AdminPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
         <div className="container mx-auto px-4 pb-20 pt-4 py-20">
           <div className="mx-auto max-w-6xl">
             {/* Header */}
@@ -263,9 +220,6 @@ export default function AdminPage() {
                 <UsersTable
                   users={users}
                   userTrainings={userTrainings}
-                  expandedUsers={expandedUsers}
-                  onToggleUserExpanded={toggleUserExpanded}
-                  onDeleteTraining={handleDeleteTraining}
                   onUploadTraining={handleUploadTrainingForUser}
                 />
               </CardContent>

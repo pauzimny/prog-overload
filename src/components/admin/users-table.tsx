@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload } from "lucide-react";
-import UserTrainings from "./user-trainings";
+import Link from "next/link";
+import { ExternalLink, Upload } from "lucide-react";
 
 interface User {
   user_id: string;
@@ -15,18 +15,12 @@ interface User {
 interface UsersTableProps {
   users: User[];
   userTrainings: { [key: string]: any[] };
-  expandedUsers: Set<string>;
-  onToggleUserExpanded: (userId: string) => void;
-  onDeleteTraining: (trainingId: string, userId: string) => void;
   onUploadTraining: (userId: string) => void;
 }
 
 export default function UsersTable({
   users,
   userTrainings,
-  expandedUsers,
-  onToggleUserExpanded,
-  onDeleteTraining,
   onUploadTraining,
 }: UsersTableProps) {
   return (
@@ -50,9 +44,6 @@ export default function UsersTable({
                   key={user.user_id}
                   user={user}
                   trainings={userTrainings[user.user_id] || []}
-                  isExpanded={expandedUsers.has(user.user_id)}
-                  onToggleExpanded={() => onToggleUserExpanded(user.user_id)}
-                  onDeleteTraining={onDeleteTraining}
                   onUploadTraining={() => onUploadTraining(user.user_id)}
                 />
               ))}
@@ -67,68 +58,47 @@ export default function UsersTable({
 interface UserTableRowProps {
   user: User;
   trainings: any[];
-  isExpanded: boolean;
-  onToggleExpanded: () => void;
-  onDeleteTraining: (trainingId: string, userId: string) => void;
   onUploadTraining: () => void;
 }
 
 function UserTableRow({
   user,
   trainings,
-  isExpanded,
-  onToggleExpanded,
-  onDeleteTraining,
   onUploadTraining,
 }: UserTableRowProps) {
   return (
-    <>
-      <tr className="border-b">
-        <td className="p-3">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onToggleExpanded}>
-              {isExpanded ? "▼" : "▶"}
-            </Button>
-            <div>
-              <div className="font-medium">
-                {user.profiles?.email || "Unknown Email"}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                ID: {user.user_id.slice(0, 8)}...
-              </div>
-            </div>
+    <tr className="border-b">
+      <td className="p-3">
+        <div>
+          <div className="font-medium">{user.profiles?.email || "Unknown Email"}</div>
+          <div className="text-sm text-muted-foreground">ID: {user.user_id.slice(0, 8)}...</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {trainings.length} trainings
           </div>
-        </td>
-        <td className="p-3">
-          <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-            {user.role}
-          </Badge>
-        </td>
-        <td className="p-3">
-          <div className="text-sm">
-            {new Date(user.created_at).toLocaleDateString()}
-          </div>
-        </td>
-        <td className="p-3">
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={onUploadTraining}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Training
-            </Button>
-          </div>
-        </td>
-      </tr>
-      {isExpanded && (
-        <tr>
-          <td colSpan={4} className="p-0">
-            <UserTrainings
-              trainings={trainings}
-              userId={user.user_id}
-              onDeleteTraining={onDeleteTraining}
-            />
-          </td>
-        </tr>
-      )}
-    </>
+        </div>
+      </td>
+      <td className="p-3">
+        <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+          {user.role}
+        </Badge>
+      </td>
+      <td className="p-3">
+        <div className="text-sm">{new Date(user.created_at).toLocaleDateString()}</div>
+      </td>
+      <td className="p-3">
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="secondary">
+            <Link href={`/admin/users/${user.user_id}`}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Details
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" onClick={onUploadTraining}>
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Training
+          </Button>
+        </div>
+      </td>
+    </tr>
   );
 }
