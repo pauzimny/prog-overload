@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CheckCircle, Circle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -133,6 +134,13 @@ export function RoundEditorItem({
               );
             }}
           />
+          {round.reps == null && (
+            <Button asChild variant="outline" size="sm" className="mt-2 w-full">
+              <Link href={`/timer?minutes=${round.time_minutes ?? 1}`}>
+                Use timer
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div>
