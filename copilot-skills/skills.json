@@ -1,0 +1,28 @@
+{
+  "project": "Next.js Application",
+  "focus": [
+    "Maintain clean and readable code",
+    "Split code into small reusable components",
+    "Extract business logic into hooks or utils",
+    "Avoid deeply nested or spaghetti code",
+    "Use descriptive variable and function names"
+  ],
+  "recommendations": [
+    {
+      "type": "component",
+      "description": "Prefer functional components with clear props, each component should do one thing."
+    },
+    {
+      "type": "logic",
+      "description": "Extract API calls, transformations, and complex calculations into separate hooks or utils."
+    },
+    {
+      "type": "folder-structure",
+      "description": "Organize by feature: each feature folder contains components, hooks, types, and styles."
+    },
+    {
+      "type": "clean-code",
+      "description": "Avoid long files. Split files over 200 lines. Keep functions pure when possible."
+    }
+  ]
+}
