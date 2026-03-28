@@ -37,12 +37,12 @@ export function TimerDisplay({
         {isPreCountdownActive ? (
           <>
             <p className="text-sm text-muted-foreground mb-2">Starting in</p>
-            <div className="text-[clamp(4rem,24vw,8rem)] leading-none font-mono font-bold tracking-wide">
+            <div className="text-[clamp(5rem,28vw,10rem)] leading-none font-mono font-bold tracking-wide">
               {Math.max(countdownSeconds, 0)}
             </div>
           </>
         ) : (
-          <div className="text-[clamp(3.5rem,20vw,7rem)] leading-none font-mono font-bold tracking-wide">
+          <div className="text-[clamp(4.5rem,24vw,9rem)] leading-none font-mono font-bold tracking-wide">
             {formatTime(shownSeconds)}
           </div>
         )}

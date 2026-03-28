@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import ProtectedRoute from "@/components/protected-route";
@@ -11,7 +11,7 @@ import { TimerControls } from "@/components/timer/timer-controls";
 import { TimerDisplay } from "@/components/timer/timer-display";
 import { useSessionTimer } from "@/hooks/use-session-timer";
 
-export default function TimerPage() {
+function TimerPageContent() {
   const searchParams = useSearchParams();
 
   const defaultMinutes = useMemo(() => {
@@ -85,5 +85,29 @@ export default function TimerPage() {
         </div>
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function TimerPage() {
+  return (
+    <Suspense
+      fallback={
+        <ProtectedRoute>
+          <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
+            <div className="container mx-auto px-4 pb-20 pt-4 py-20">
+              <div className="mx-auto max-w-2xl">
+                <Card>
+                  <CardContent className="py-6 text-sm text-muted-foreground">
+                    Loading timer...
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </ProtectedRoute>
+      }
+    >
+      <TimerPageContent />
+    </Suspense>
   );
 }

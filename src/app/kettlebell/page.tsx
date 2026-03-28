@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ProtectedRoute from "@/components/protected-route";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Calendar, Plus } from "lucide-react";
 
-export default function KettlebellPage() {
+function KettlebellPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const { toasts, toast, removeToast } = useToast();
@@ -129,5 +129,29 @@ export default function KettlebellPage() {
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
+  );
+}
+
+export default function KettlebellPage() {
+  return (
+    <Suspense
+      fallback={
+        <ProtectedRoute>
+          <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
+            <div className="container mx-auto px-4 pb-20 pt-4 py-20">
+              <div className="mx-auto max-w-5xl">
+                <Card>
+                  <CardContent className="py-6 text-sm text-muted-foreground">
+                    Loading kettlebell module...
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </ProtectedRoute>
+      }
+    >
+      <KettlebellPageContent />
+    </Suspense>
   );
 }
