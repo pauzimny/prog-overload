@@ -29,7 +29,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Home", href: user ? "/dashboard" : "/" },
-    ...(user ? [{ name: "Kettlebell", href: "/kettlebell" }] : []),
+    ...(isAdminUser ? [{ name: "Kettlebell", href: "/kettlebell" }] : []),
 
     ...(isAdminUser ? [{ name: "Admin", href: "/admin" }] : []),
   ];
