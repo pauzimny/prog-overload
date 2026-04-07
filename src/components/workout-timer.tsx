@@ -29,11 +29,13 @@ import { Textarea } from "./ui/textarea";
 interface WorkoutTimerProps {
   training: TrainingWithExercises;
   onComplete: () => void;
+  preserveStatus?: boolean;
 }
 
 export default function WorkoutTimer({
   training,
   onComplete,
+  preserveStatus = false,
 }: WorkoutTimerProps) {
   const [isRunning, setIsRunning] = useState(true); // Auto-start
   // const [seconds, setSeconds] = useState(0);
@@ -145,10 +147,16 @@ export default function WorkoutTimer({
         }
       }
 
-      // Mark training as done
-      await updateTrainingStatus(training.id!, "done");
+      if (!preserveStatus) {
+        await updateTrainingStatus(training.id!, "done");
+      }
 
-      toast({ message: "Workout completed successfully!", type: "success" });
+      toast({
+        message: preserveStatus
+          ? "Workout changes saved successfully!"
+          : "Workout completed successfully!",
+        type: "success",
+      });
       onComplete();
     } catch (error) {
       console.error("Failed to complete workout:", error);
@@ -323,7 +331,7 @@ export default function WorkoutTimer({
                 key={round.id}
                 className={`space-y-3 p-3 rounded-lg border transition-all duration-200 ${
                   isDone
-                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 dark:from-emerald-950/20 dark:to-teal-950/20 dark:border-emerald-800"
+                    ? "bg-linear-to-r from-emerald-50 to-teal-50 border-emerald-200 dark:from-emerald-950/20 dark:to-teal-950/20 dark:border-emerald-800"
                     : "bg-background border-border"
                 }`}
               >

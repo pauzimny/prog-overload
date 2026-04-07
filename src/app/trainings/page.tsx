@@ -12,6 +12,15 @@ import { useTrainingOperations } from "@/hooks/use-training-operations";
 import { getUserTrainings } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { ToastContainer } from "@/components/ui/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import type { TrainingWithExercises } from "@/schemas/database";
 
 export default function TrainingsPage() {
@@ -21,6 +30,10 @@ export default function TrainingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [activeWorkout, setActiveWorkout] =
+    useState<TrainingWithExercises | null>(null);
+  const [preserveWorkoutStatus, setPreserveWorkoutStatus] = useState(false);
+  const [editChoiceOpen, setEditChoiceOpen] = useState(false);
+  const [selectedDoneTraining, setSelectedDoneTraining] =
     useState<TrainingWithExercises | null>(null);
   const { toasts, removeToast } = useToast();
   const {
@@ -82,16 +95,55 @@ export default function TrainingsPage() {
   // };
 
   const startWorkout = async (training: TrainingWithExercises) => {
+    let trainingForSession = training;
+
     if (training.status !== "active") {
-      await setTrainingAsActive(training.id as string);
+      const activated = await setTrainingAsActive(training.id as string);
+      if (!activated) {
+        return;
+      }
+
+      trainingForSession = {
+        ...training,
+        status: "active",
+      } as TrainingWithExercises;
     }
-    setActiveWorkout(training);
+
+    setPreserveWorkoutStatus(false);
+    setActiveWorkout(trainingForSession);
     fetchTrainings(); // Refresh to show updated status
   };
 
   const completeWorkout = () => {
     setActiveWorkout(null);
+    setPreserveWorkoutStatus(false);
     fetchTrainings(); // Refresh the list to show updated status
+  };
+
+  const handleEditWorkout = (training: TrainingWithExercises) => {
+    setSelectedDoneTraining(training);
+    setEditChoiceOpen(true);
+  };
+
+  const handleContinueDoneWorkout = async () => {
+    if (!selectedDoneTraining) return;
+
+    const activated = await setTrainingAsActive(selectedDoneTraining.id as string);
+    if (activated) {
+      await fetchTrainings();
+    }
+
+    setEditChoiceOpen(false);
+    setSelectedDoneTraining(null);
+  };
+
+  const handleEditOnlyDoneWorkout = () => {
+    if (!selectedDoneTraining) return;
+
+    setPreserveWorkoutStatus(true);
+    setActiveWorkout(selectedDoneTraining);
+    setSelectedDoneTraining(null);
+    setEditChoiceOpen(false);
   };
 
   const handleToggleStatus = async (
@@ -151,7 +203,7 @@ export default function TrainingsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="min-h-screen bg-linear-to-br from-background to-muted/20">
         <div className="container mx-auto px-4 pb-20 pt-4 py-20">
           <div className="mx-auto max-w-6xl">
             {/* Show Workout Timer when active */}
@@ -159,6 +211,7 @@ export default function TrainingsPage() {
               <WorkoutTimer
                 training={activeWorkout}
                 onComplete={completeWorkout}
+                preserveStatus={preserveWorkoutStatus}
               />
             ) : (
               <>
@@ -186,6 +239,7 @@ export default function TrainingsPage() {
                         training={training}
                         onStartWorkout={startWorkout}
                         onSetAsDone={handleSetAsDone}
+                        onEditWorkout={handleEditWorkout}
                         // onCopyTraining={copyTrainingToClipboard}
                         onDeleteTraining={handleDeleteTraining}
                         onToggleStatus={handleToggleStatus}
@@ -204,6 +258,25 @@ export default function TrainingsPage() {
         isOpen={isCreateFormOpen}
         onClose={() => setIsCreateFormOpen(false)}
       />
+
+      <Dialog open={editChoiceOpen} onOpenChange={setEditChoiceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit completed workout</DialogTitle>
+            <DialogDescription>
+              Continue will reactivate this workout as active. Edit only keeps
+              current status and opens editable mode.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleEditOnlyDoneWorkout}>
+              Edit only
+            </Button>
+            <Button onClick={handleContinueDoneWorkout}>Continue workout</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );

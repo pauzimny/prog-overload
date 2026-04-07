@@ -6,6 +6,7 @@ interface TrainingActionsProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
   onSetAsDone: (training?: TrainingWithExercises) => void;
+  onEditWorkout: (training: TrainingWithExercises) => void;
   // onCopyTraining: (training: TrainingWithExercises) => void;
   onDeleteTraining: (trainingId: string) => void;
 }
@@ -13,6 +14,7 @@ export const TrainingActions = ({
   training,
   onStartWorkout,
   onSetAsDone,
+  onEditWorkout,
   // onCopyTraining,
   onDeleteTraining,
 }: TrainingActionsProps) => {
@@ -89,6 +91,28 @@ export const TrainingActions = ({
             >
               <Copy className="h-4 w-4" />
             </Button> */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDeleteTraining(training.id!)}
+              title="Delete this workout"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      {training.status === "done" && (
+        <div className="flex gap-4 pb-2 justify-end">
+          <Button
+            size="xs"
+            onClick={() => onEditWorkout(training)}
+            title="Edit this completed workout"
+          >
+            Edit
+          </Button>
+
+          <div className="flex gap-2 justify-end">
             <Button
               variant="ghost"
               size="sm"
