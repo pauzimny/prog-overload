@@ -22,6 +22,7 @@ import {
   updateTrainingStatus,
   updateRound,
   updateExercise,
+  createRound,
 } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "./ui/textarea";
@@ -128,22 +129,11 @@ export default function WorkoutTimer({
   const handleComplete = async () => {
     try {
       // Update all rounds with edited values including done status
-      // Process rounds in their original order to maintain consistency
-      for (const exercise of editedTraining.exercises) {
-        // Sort rounds by created_at to ensure we update them in original order
-        const sortedRounds = exercise.rounds.sort(
-          (a, b) =>
-            new Date(a.created_at || 0).getTime() -
-            new Date(b.created_at || 0).getTime(),
-        );
+      for (let exerciseIndex = 0; exerciseIndex < editedTraining.exercises.length; exerciseIndex++) {
+        const exercise = editedTraining.exercises[exerciseIndex];
 
-        for (const round of sortedRounds) {
-          await updateRound(round.id!, {
-            weight: round.weight,
-            reps: round.reps,
-            comments: round.comments,
-            done: round.done, // Preserve done status
-          });
+        for (let roundIndex = 0; roundIndex < exercise.rounds.length; roundIndex++) {
+          await persistRound(exerciseIndex, roundIndex);
         }
       }
 
@@ -193,6 +183,57 @@ export default function WorkoutTimer({
     setEditedTraining(newTraining);
   };
 
+  const persistRound = async (exerciseIndex: number, roundIndex: number) => {
+    const exercise = editedTraining.exercises[exerciseIndex];
+    const round = exercise.rounds[roundIndex];
+
+    if (!round || !exercise?.id) {
+      throw new Error("Round or exercise not found");
+    }
+
+    if ((round.weight ?? 0) <= 0 || (round.reps ?? 0) <= 0) {
+      throw new Error("Weight and reps must be greater than 0");
+    }
+
+    const roundId = round.id;
+
+    if (!roundId || roundId.startsWith("temp-")) {
+      const createdRound = await createRound({
+        exercise_id: exercise.id,
+        weight: round.weight,
+        reps: round.reps,
+        comments: round.comments,
+        done: round.done || false,
+      });
+
+      setEditedTraining((prev) => {
+        const next = { ...prev };
+        next.exercises = [...prev.exercises];
+        next.exercises[exerciseIndex] = {
+          ...prev.exercises[exerciseIndex],
+          rounds: [...prev.exercises[exerciseIndex].rounds],
+        };
+
+        next.exercises[exerciseIndex].rounds[roundIndex] = {
+          ...next.exercises[exerciseIndex].rounds[roundIndex],
+          id: createdRound.id,
+          created_at: createdRound.created_at,
+        };
+
+        return next;
+      });
+
+      return;
+    }
+
+    await updateRound(roundId, {
+      weight: round.weight,
+      reps: round.reps,
+      comments: round.comments,
+      done: round.done,
+    });
+  };
+
   const removeRound = (exerciseIndex: number, roundIndex: number) => {
     const newTraining = { ...editedTraining };
     if (newTraining.exercises[exerciseIndex].rounds.length > 1) {
@@ -213,15 +254,31 @@ export default function WorkoutTimer({
         ...round,
         done: newDoneStatus,
       };
+      setEditedTraining(newTraining);
 
       // Update in database
+      const roundId = round.id;
 
-      await updateRound(round.id!, {
-        ...round,
-        done: newDoneStatus,
-      });
-      // await updateRoundDoneStatus(round.id!, newDoneStatus);
-      setEditedTraining(newTraining);
+      if (!roundId || roundId.startsWith("temp-")) {
+        const createdRound = await createRound({
+          exercise_id: round.exercise_id,
+          weight: round.weight,
+          reps: round.reps,
+          comments: round.comments,
+          done: newDoneStatus,
+        });
+
+        newTraining.exercises[exerciseIndex].rounds[roundIndex] = {
+          ...newTraining.exercises[exerciseIndex].rounds[roundIndex],
+          id: createdRound.id,
+          created_at: createdRound.created_at,
+        };
+        setEditedTraining(newTraining);
+      } else {
+        await updateRound(roundId, {
+          done: newDoneStatus,
+        });
+      }
 
       toast({
         message: `Round ${roundIndex + 1} marked as ${newDoneStatus ? "done" : "not done"}!`,
@@ -234,15 +291,8 @@ export default function WorkoutTimer({
   };
 
   const saveRound = async (exerciseIndex: number, roundIndex: number) => {
-    const round = editedTraining.exercises[exerciseIndex].rounds[roundIndex];
-
     try {
-      await updateRound(round.id!, {
-        weight: round.weight,
-        reps: round.reps,
-        comments: round.comments,
-        done: round.done,
-      });
+      await persistRound(exerciseIndex, roundIndex);
 
       toast({
         message: `Round ${roundIndex + 1} saved successfully!`,
