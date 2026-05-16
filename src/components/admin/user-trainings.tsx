@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Copy } from "lucide-react";
 import { copyTrainingToClipboard } from "@/lib/training-utils";
-import { useAdminToast } from "@/hooks/use-admin-toast";
+import { toast } from "sonner";
 
 interface UserTrainingsProps {
   trainings: any[];
@@ -15,14 +15,13 @@ export default function UserTrainings({
   userId,
   onDeleteTraining,
 }: UserTrainingsProps) {
-  const { toast } = useAdminToast();
-
   const handleCopyTraining = async (training: any) => {
     const result = await copyTrainingToClipboard(training);
-    toast({
-      message: result.message,
-      type: result.success ? "success" : "error",
-    });
+    if (result.success) {
+      toast.success(result.message);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
