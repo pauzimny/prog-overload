@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, Dumbbell, Calendar, Activity } from "lucide-react";
+import {  Dumbbell, Calendar, Activity } from "lucide-react";
 
 interface AdminStats {
   totalUsers: number;
@@ -26,7 +26,7 @@ interface AdminStatsProps {
 export default function AdminStats({ stats }: AdminStatsProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-      <Card>
+      {/* <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -35,9 +35,9 @@ export default function AdminStats({ stats }: AdminStatsProps) {
           <div className="text-2xl font-bold">{stats?.totalUsers}</div>
           <p className="text-xs text-muted-foreground">Registered users</p>
         </CardContent>
-      </Card>
+      </Card> */}
 
-      <Card>
+      {/* <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Trainings</CardTitle>
           <Dumbbell className="h-4 w-4 text-muted-foreground" />
@@ -46,9 +46,9 @@ export default function AdminStats({ stats }: AdminStatsProps) {
           <div className="text-2xl font-bold">{stats?.totalTrainings}</div>
           <p className="text-xs text-muted-foreground">All workout sessions</p>
         </CardContent>
-      </Card>
+      </Card> */}
 
-      <Card>
+      {/* <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Active Plans</CardTitle>
           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -57,8 +57,8 @@ export default function AdminStats({ stats }: AdminStatsProps) {
           <div className="text-2xl font-bold">{stats?.totalPlans}</div>
           <p className="text-xs text-muted-foreground">Workout plans</p>
         </CardContent>
-      </Card>
-
+      </Card> */}
+{/* 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Completed</CardTitle>
@@ -68,7 +68,7 @@ export default function AdminStats({ stats }: AdminStatsProps) {
           <div className="text-2xl font-bold">{stats?.totalDone}</div>
           <p className="text-xs text-muted-foreground">Finished workouts</p>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

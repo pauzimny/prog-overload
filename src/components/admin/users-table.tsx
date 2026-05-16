@@ -1,5 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import Link from "next/link";
 import { ExternalLink, Upload } from "lucide-react";
 
@@ -28,28 +36,26 @@ export default function UsersTable({
       {users.length === 0 ? (
         <p className="text-muted-foreground text-center py-4">No users found</p>
       ) : (
-        <div className="border rounded-lg">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-3">User</th>
-                <th className="text-left p-3">Role</th>
-                <th className="text-left p-3">Created</th>
-                <th className="text-left p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <UserTableRow
-                  key={user.user_id}
-                  user={user}
-                  trainings={userTrainings[user.user_id] || []}
-                  onUploadTraining={() => onUploadTraining(user.user_id)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <UserTableRow
+                key={user.user_id}
+                user={user}
+                trainings={userTrainings[user.user_id] || []}
+                onUploadTraining={() => onUploadTraining(user.user_id)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );
@@ -67,38 +73,40 @@ function UserTableRow({
   onUploadTraining,
 }: UserTableRowProps) {
   return (
-    <tr className="border-b">
-      <td className="p-3">
+    <TableRow>
+      <TableCell>
         <div>
           <div className="font-medium">{user.profiles?.email || "Unknown Email"}</div>
-          <div className="text-sm text-muted-foreground">ID: {user.user_id.slice(0, 8)}...</div>
+          <div className="text-sm text-muted-foreground">
+            ID: {user.user_id.slice(0, 8)}...
+          </div>
           <div className="text-xs text-muted-foreground mt-1">
             {trainings.length} trainings
           </div>
         </div>
-      </td>
-      <td className="p-3">
+      </TableCell>
+      <TableCell>
         <Badge variant={user.role === "admin" ? "default" : "secondary"}>
           {user.role}
         </Badge>
-      </td>
-      <td className="p-3">
+      </TableCell>
+      <TableCell>
         <div className="text-sm">{new Date(user.created_at).toLocaleDateString()}</div>
-      </td>
-      <td className="p-3">
-        <div className="flex gap-2">
-          <Button asChild size="sm" variant="secondary">
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="secondary" className="flex-1 sm:flex-none min-w-10 h-full">
             <Link href={`/admin/users/${user.user_id}`}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Details
+              <ExternalLink className="h-9! w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Details</span>
             </Link>
           </Button>
-          <Button size="sm" variant="outline" onClick={onUploadTraining}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Training
+          <Button size="sm" variant="outline" onClick={onUploadTraining} className="flex-1 sm:flex-none min-w-10">
+            <Upload className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Upload Training</span>
           </Button>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

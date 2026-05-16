@@ -195,7 +195,7 @@ export default function AdminPage() {
             </div>
 
             {/* Stats Grid */}
-            <AdminStatsComponent stats={stats} />
+            {/* <AdminStatsComponent stats={stats} /> */}
 
             {/* Recent Activity */}
             <RecentActivity recentActivity={stats?.recentActivity || []} />
