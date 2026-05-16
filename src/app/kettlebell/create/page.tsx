@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ToastContainer } from "@/components/ui/toast";
 
 type RoundMetricType = "reps" | "time";
 
@@ -46,7 +45,7 @@ const defaultRound = (): FormRound => ({
 export default function CreateKettlebellTrainingPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { toasts, toast, removeToast } = useToast();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [trainingName, setTrainingName] = useState("");
@@ -410,7 +409,7 @@ export default function CreateKettlebellTrainingPage() {
         </div>
       </div>
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
     </ProtectedRoute>
   );
 }

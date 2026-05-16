@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ToastContainer } from "@/components/ui/toast";
 import { TrainingHeaderCard } from "@/components/kettlebell/training-header-card";
 import { ExerciseSessionCard } from "@/components/kettlebell/exercise-session-card";
 
@@ -27,7 +26,7 @@ export default function KettlebellTrainingPage() {
   const params = useParams<{ trainingId: string }>();
   const trainingId = params?.trainingId;
   const { user } = useAuth();
-  const { toasts, toast, removeToast } = useToast();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState<KettlebellTrainingWithExercises | null>(
@@ -224,7 +223,7 @@ export default function KettlebellTrainingPage() {
         </div>
       </div>
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
     </ProtectedRoute>
   );
 }

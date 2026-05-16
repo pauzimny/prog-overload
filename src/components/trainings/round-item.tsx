@@ -1,4 +1,5 @@
-import { CheckCircle, Circle } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import type { Round } from "@/schemas/database";
@@ -6,7 +7,7 @@ import type { Round } from "@/schemas/database";
 interface RoundItemProps {
   round: Round;
   roundIndex: number;
-  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => Promise<boolean>;
 }
 
 export const RoundItem = ({
@@ -14,8 +15,18 @@ export const RoundItem = ({
   roundIndex,
   onToggleRoundDone,
 }: RoundItemProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   if (!round) return null;
   const isDone = round?.done;
+
+  const handleToggle = async () => {
+    setIsLoading(true);
+    try {
+      await onToggleRoundDone(round.id!, round?.done);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -30,7 +41,8 @@ export const RoundItem = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onToggleRoundDone(round.id!, round?.done)}
+          onClick={handleToggle}
+          disabled={isLoading}
           className={`p-1 h-6 w-6 transition-all duration-200 ${
             isDone
               ? "hover:bg-emerald-200 dark:hover:bg-emerald-800"
@@ -38,7 +50,9 @@ export const RoundItem = ({
           }`}
           title={isDone ? "Mark as not done" : "Mark as done"}
         >
-          {isDone ? (
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : isDone ? (
             <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           ) : (
             <Circle className="h-4 w-4 text-muted-foreground" />

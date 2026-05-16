@@ -177,17 +177,9 @@ export function useTrainingOperations() {
   ) => {
     try {
       await updateRoundDoneStatus(roundId, !currentDone);
-      toast({
-        message: `Round marked as ${!currentDone ? "done" : "not done"}!`,
-        type: "success",
-      });
       return true; // Indicate success
     } catch (err: any) {
       console.error("Failed to update round status: ", err);
-      toast({
-        message: "Failed to update round status",
-        type: "error",
-      });
       return false; // Indicate failure
     }
   };

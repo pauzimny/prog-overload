@@ -10,7 +10,7 @@ interface ExerciseItemProps {
   exercise: Exercise;
   exerciseIndex: number;
   totalExercises: number;
-  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => Promise<boolean>;
 }
 
 export const ExerciseItem = ({

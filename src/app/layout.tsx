@@ -5,6 +5,7 @@ import Navbar from "@/components/navbar";
 import { AuthProvider } from "@/contexts/auth-context";
 import ServiceWorkerRegister from "@/components/service-worker-register";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,6 +83,7 @@ export default function RootLayout({
           {children}
           <ServiceWorkerRegister />
           <PWAInstallPrompt />
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

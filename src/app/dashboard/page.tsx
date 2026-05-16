@@ -15,7 +15,6 @@ import CreateTrainingForm from "@/components/create-training-form";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { ToastContainer } from "@/components/ui/toast";
 import {
   getUserTrainings,
   type TrainingWithExercises,
@@ -30,7 +29,6 @@ export default function Dashboard() {
   const [plans, setPlans] = useState<TrainingWithExercises[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const router = useRouter();
-  const { toasts, toast, removeToast } = useToast();
 
   const fetchPlans = useCallback(async () => {
     if (!user) return;
@@ -172,7 +170,7 @@ export default function Dashboard() {
           fetchPlans(); // Refresh plans after creating a new training
         }}
       />
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
     </ProtectedRoute>
   );
 }

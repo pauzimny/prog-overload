@@ -19,7 +19,7 @@ interface TrainingCardProps {
     trainingId: string,
     currentStatus: "plan" | "active" | "done",
   ) => void;
-  onToggleRoundDone: (roundId: string, currentDone: boolean) => void;
+  onToggleRoundDone: (roundId: string, currentDone: boolean) => Promise<boolean>;
 }
 
 export default function TrainingCard({

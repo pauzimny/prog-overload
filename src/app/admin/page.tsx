@@ -15,7 +15,7 @@ import AdminStatsComponent from "@/components/admin/admin-stats";
 import RecentActivity from "@/components/admin/recent-activity";
 import UploadTrainingDialog from "@/components/admin/upload-training-dialog";
 import UsersTable from "@/components/admin/users-table";
-import { AdminToastContainer } from "@/components/admin/admin-toast-container";
+
 import {
   Card,
   CardContent,
@@ -24,11 +24,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAdminToast } from "@/hooks/use-admin-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const { toasts, removeToast, toast } = useAdminToast();
+  const { toast } = useToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -240,7 +240,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <AdminToastContainer toasts={toasts} onRemove={removeToast} />
     </ProtectedRoute>
   );
 }

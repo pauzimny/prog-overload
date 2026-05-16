@@ -11,7 +11,6 @@ import TrainingsHeader from "@/components/trainings/trainings-header";
 import { useTrainingOperations } from "@/hooks/use-training-operations";
 import { getUserTrainings } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
-import { ToastContainer } from "@/components/ui/toast";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +34,7 @@ export default function TrainingsPage() {
   const [editChoiceOpen, setEditChoiceOpen] = useState(false);
   const [selectedDoneTraining, setSelectedDoneTraining] =
     useState<TrainingWithExercises | null>(null);
-  const { toasts, removeToast } = useToast();
+  const { toast } = useToast();
   const {
     copyUserIdToClipboard,
     toggleTrainingStatus,
@@ -45,11 +44,11 @@ export default function TrainingsPage() {
     toggleRoundDoneStatus,
   } = useTrainingOperations();
 
-  const fetchTrainings = useCallback(async () => {
+  const fetchTrainings = useCallback(async (showLoader = false) => {
     if (!user) return;
 
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       setError(null);
       const data = await getUserTrainings(user.id);
       const sortedData = data.sort((a, b) => {
@@ -86,7 +85,7 @@ export default function TrainingsPage() {
   }, [user]);
 
   useEffect(() => {
-    fetchTrainings();
+    fetchTrainings(true);
   }, [fetchTrainings]);
 
   // const handleCreateSuccess = () => {
@@ -175,11 +174,19 @@ export default function TrainingsPage() {
   const handleToggleRoundDone = async (
     roundId: string,
     currentDone: boolean,
-  ) => {
+  ): Promise<boolean> => {
     const success = await toggleRoundDoneStatus(roundId, currentDone);
+    console.log("Toggle round done status result:", success);
     if (success) {
+      toast({
+        message: currentDone ? "Round marked as not done" : "Round marked as done",
+        type: "success",
+      });
       fetchTrainings(); // Refresh list to show updated round status
+    } else {
+      toast({ message: "Failed to update round status", type: "error" });
     }
+    return success;
   };
 
   if (loading) {
@@ -277,7 +284,7 @@ export default function TrainingsPage() {
         </DialogContent>
       </Dialog>
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
     </ProtectedRoute>
   );
 }

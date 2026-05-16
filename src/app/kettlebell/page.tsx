@@ -7,7 +7,6 @@ import ProtectedRoute from "@/components/protected-route";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { ToastContainer } from "@/components/ui/toast";
 import { getUserKettlebellTrainings, type KettlebellTrainingWithExercises } from "@/lib/kettlebell-operations";
 import {
   Card,
@@ -21,7 +20,7 @@ import { Calendar, Plus } from "lucide-react";
 function KettlebellPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
-  const { toasts, toast, removeToast } = useToast();
+  const { toast } = useToast();
   const [plans, setPlans] = useState<KettlebellTrainingWithExercises[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
 
@@ -127,7 +126,7 @@ function KettlebellPageContent() {
         </div>
       </div>
 
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
     </ProtectedRoute>
   );
 }
