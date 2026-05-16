@@ -11,7 +11,6 @@ import {
   fetchUsersWithTrainings,
   type AdminStats,
 } from "@/lib/admin-operations";
-import AdminStatsComponent from "@/components/admin/admin-stats";
 import RecentActivity from "@/components/admin/recent-activity";
 import UploadTrainingDialog from "@/components/admin/upload-training-dialog";
 import UsersTable from "@/components/admin/users-table";
@@ -28,7 +27,6 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -179,18 +177,7 @@ export default function AdminPage() {
                     Manage users and monitor platform activity
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast({
-                      message: "Test toast notification!",
-                      type: "success",
-                    })
-                  }
-                >
-                  Test Toast
-                </Button>
+         
               </div>
             </div>
 
