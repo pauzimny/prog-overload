@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   Dumbbell,
   CheckCircle,
   Circle,
+  Loader2,
 } from "lucide-react";
 import { TrainingWithExercises } from "@/schemas/database";
 import {
@@ -65,9 +66,38 @@ export default function WorkoutTimer({
       })),
     };
   });
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [switchingExerciseIndex, setSwitchingExerciseIndex] = useState<number | null>(null);
+  const [pendingSaveRounds, setPendingSaveRounds] = useState<Set<string>>(new Set());
+  const [pendingToggleRounds, setPendingToggleRounds] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
+
+  const getRoundActionKey = (exerciseIndex: number, roundIndex: number) =>
+    `${exerciseIndex}-${roundIndex}`;
+
+  const addPendingRound = (
+    setter: Dispatch<SetStateAction<Set<string>>>,
+    key: string,
+  ) => {
+    setter((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  };
+
+  const removePendingRound = (
+    setter: Dispatch<SetStateAction<Set<string>>>,
+    key: string,
+  ) => {
+    setter((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+  };
 
   // useEffect(() => {
   //   if (isRunning) {
@@ -103,6 +133,9 @@ export default function WorkoutTimer({
   };
 
   const handleExerciseChange = async (exerciseIndex: number) => {
+    if (isCompleting || switchingExerciseIndex !== null) return;
+
+    setSwitchingExerciseIndex(exerciseIndex);
     try {
       const newExercise = editedTraining.exercises[exerciseIndex];
 
@@ -123,10 +156,15 @@ export default function WorkoutTimer({
     } catch (error) {
       console.error("Failed to switch exercise:", error);
       toast({ message: "Failed to switch exercise", type: "error" });
+    } finally {
+      setSwitchingExerciseIndex(null);
     }
   };
 
   const handleComplete = async () => {
+    if (isCompleting) return;
+
+    setIsCompleting(true);
     try {
       // Update all rounds with edited values including done status
       for (let exerciseIndex = 0; exerciseIndex < editedTraining.exercises.length; exerciseIndex++) {
@@ -151,6 +189,8 @@ export default function WorkoutTimer({
     } catch (error) {
       console.error("Failed to complete workout:", error);
       toast({ message: "Failed to complete workout", type: "error" });
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -243,9 +283,14 @@ export default function WorkoutTimer({
   };
 
   const toggleRoundDone = async (exerciseIndex: number, roundIndex: number) => {
+    if (isCompleting) return;
+
     const round = editedTraining.exercises[exerciseIndex].rounds[roundIndex];
     const currentDoneStatus = round.done || false; // Handle undefined case
     const newDoneStatus = !currentDoneStatus;
+    const roundActionKey = getRoundActionKey(exerciseIndex, roundIndex);
+
+    addPendingRound(setPendingToggleRounds, roundActionKey);
 
     try {
       // Update local state
@@ -285,12 +330,34 @@ export default function WorkoutTimer({
         type: "success",
       });
     } catch (error) {
+      // Revert optimistic toggle when persistence fails.
+      setEditedTraining((prev) => {
+        const next = { ...prev };
+        next.exercises = [...prev.exercises];
+        next.exercises[exerciseIndex] = {
+          ...prev.exercises[exerciseIndex],
+          rounds: [...prev.exercises[exerciseIndex].rounds],
+        };
+        next.exercises[exerciseIndex].rounds[roundIndex] = {
+          ...next.exercises[exerciseIndex].rounds[roundIndex],
+          done: currentDoneStatus,
+        };
+        return next;
+      });
+
       console.error("Failed to update round status:", error);
       toast({ message: "Failed to update round status", type: "error" });
+    } finally {
+      removePendingRound(setPendingToggleRounds, roundActionKey);
     }
   };
 
   const saveRound = async (exerciseIndex: number, roundIndex: number) => {
+    if (isCompleting) return;
+
+    const roundActionKey = getRoundActionKey(exerciseIndex, roundIndex);
+    addPendingRound(setPendingSaveRounds, roundActionKey);
+
     try {
       await persistRound(exerciseIndex, roundIndex);
 
@@ -301,6 +368,8 @@ export default function WorkoutTimer({
     } catch (error) {
       console.error("Failed to save round:", error);
       toast({ message: "Failed to save round", type: "error" });
+    } finally {
+      removePendingRound(setPendingSaveRounds, roundActionKey);
     }
   };
 
@@ -319,6 +388,7 @@ export default function WorkoutTimer({
               onClick={handleStartPause}
               variant={isRunning ? "secondary" : "default"}
               size="sm"
+              disabled={isCompleting}
             >
               {isRunning ? (
                 <Pause className="h-4 w-4 mr-2" />
@@ -327,9 +397,18 @@ export default function WorkoutTimer({
               )}
               {isRunning ? "Pause" : "Start"}
             </Button>
-            <Button onClick={handleComplete} variant="default" size="sm">
-              <Check className="h-4 w-4 mr-2" />
-              Complete
+            <Button
+              onClick={handleComplete}
+              variant="default"
+              size="sm"
+              disabled={isCompleting}
+            >
+              {isCompleting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
+              {isCompleting ? "Completing..." : "Complete"}
             </Button>
           </div>
         </CardContent>
@@ -342,22 +421,31 @@ export default function WorkoutTimer({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {editedTraining.exercises.map((exercise, index) => (
-              <Button
-                key={`exercise-${exercise.id}`}
-                variant={index === currentExerciseIndex ? "default" : "outline"}
-                className="w-full justify-start"
-                onClick={() => handleExerciseChange(index)}
-              >
-                <Dumbbell className="h-4 w-4 mr-2" />
-                {exercise.name}
-                {exercise.active && (
-                  <Badge variant="secondary" className="ml-auto">
-                    Active
-                  </Badge>
-                )}
-              </Button>
-            ))}
+            {editedTraining.exercises.map((exercise, index) => {
+              const isSwitchingThisExercise = switchingExerciseIndex === index;
+
+              return (
+                <Button
+                  key={`exercise-${exercise.id}`}
+                  variant={index === currentExerciseIndex ? "default" : "outline"}
+                  className="w-full justify-start"
+                  onClick={() => handleExerciseChange(index)}
+                  disabled={isCompleting || switchingExerciseIndex !== null}
+                >
+                  {isSwitchingThisExercise ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Dumbbell className="h-4 w-4 mr-2" />
+                  )}
+                  {exercise.name}
+                  {exercise.active && (
+                    <Badge variant="secondary" className="ml-auto">
+                      Active
+                    </Badge>
+                  )}
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -376,6 +464,10 @@ export default function WorkoutTimer({
         <CardContent className="space-y-4">
           {currentExercise?.rounds.map((round, roundIndex) => {
             const isDone = round.done === true;
+            const roundActionKey = getRoundActionKey(currentExerciseIndex, roundIndex);
+            const isSavingRound = pendingSaveRounds.has(roundActionKey);
+            const isTogglingRound = pendingToggleRounds.has(roundActionKey);
+            const isRoundBusy = isCompleting || isSavingRound || isTogglingRound;
             return (
               <div
                 key={round.id}
@@ -393,6 +485,7 @@ export default function WorkoutTimer({
                       onClick={() =>
                         toggleRoundDone(currentExerciseIndex, roundIndex)
                       }
+                      disabled={isRoundBusy}
                       className={`p-1 h-6 w-6 transition-all duration-200 ${
                         isDone
                           ? "hover:bg-emerald-200 dark:hover:bg-emerald-800"
@@ -400,7 +493,9 @@ export default function WorkoutTimer({
                       }`}
                       title={isDone ? "Mark as not done" : "Mark as done"}
                     >
-                      {isDone ? (
+                      {isTogglingRound ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : isDone ? (
                         <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                       ) : (
                         <Circle className="h-4 w-4 text-muted-foreground" />
@@ -424,6 +519,7 @@ export default function WorkoutTimer({
                       onClick={() =>
                         removeRound(currentExerciseIndex, roundIndex)
                       }
+                      disabled={isRoundBusy}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -432,13 +528,17 @@ export default function WorkoutTimer({
                     variant="outline"
                     size="sm"
                     onClick={() => saveRound(currentExerciseIndex, roundIndex)}
+                    disabled={isRoundBusy}
                     className={`transition-all duration-200 ${
                       isDone
                         ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300"
                         : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
                     }`}
                   >
-                    Save
+                    {isSavingRound ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : null}
+                    {isSavingRound ? "Saving..." : "Save"}
                   </Button>
                 </div>
 
@@ -455,6 +555,7 @@ export default function WorkoutTimer({
                       step="0.5"
                       value={round.weight ?? ""}
                       min="0"
+                      disabled={isRoundBusy}
                       onChange={(e) => {
                         updateRoundData(
                           currentExerciseIndex,
@@ -474,6 +575,7 @@ export default function WorkoutTimer({
                       type="number"
                       value={round.reps}
                       min="0"
+                      disabled={isRoundBusy}
                       onChange={(e) => {
                         updateRoundData(
                           currentExerciseIndex,
@@ -491,6 +593,7 @@ export default function WorkoutTimer({
                   id={`comments-${roundIndex}`}
                   placeholder="Optional notes about this round"
                   value={round.comments || ""}
+                  disabled={isRoundBusy}
                   onChange={(e) =>
                     updateRoundData(
                       currentExerciseIndex,
