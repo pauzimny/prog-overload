@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +52,10 @@ export default function AdminPage() {
 
   const handleUploadTraining = async () => {
     if (!selectedUserId || !uploadJson) {
-      alert("Please select a user and provide JSON content");
+      toast({
+        message: "Please select a user and provide JSON content",
+        type: "error",
+      });
       return;
     }
 
@@ -69,12 +73,16 @@ export default function AdminPage() {
       // Refresh users and trainings
       fetchUsers();
 
-      alert("Training uploaded successfully!");
+      toast({
+        message: "Training uploaded successfully!",
+        type: "success",
+      });
     } catch (error: any) {
       console.error("Failed to upload training:", error);
-      alert(
-        `Failed to upload training: ${error?.message || "Please check the JSON format."}`,
-      );
+      toast({
+        message: `Failed to upload training: ${error?.message || "Please check the JSON format."}`,
+        type: "error",
+      });
     }
   };
 

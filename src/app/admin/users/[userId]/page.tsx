@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 type AdminUser = {
   user_id: string;
@@ -36,6 +37,7 @@ export default function UserDetailsPage() {
   const params = useParams<{ userId: string }>();
   const userId = params?.userId;
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
@@ -107,10 +109,13 @@ export default function UserDetailsPage() {
       await deleteTraining(trainingId, userId);
       const updatedTrainings = await refreshUserTrainings(userId);
       setTrainings(updatedTrainings);
-      alert("Training deleted successfully!");
+      toast({ message: "Training deleted successfully!", type: "success" });
     } catch (err) {
       console.error("Failed to delete training:", err);
-      alert("Failed to delete training. Please try again.");
+      toast({
+        message: "Failed to delete training. Please try again.",
+        type: "error",
+      });
     }
   };
 
