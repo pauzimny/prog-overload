@@ -1,13 +1,14 @@
 import type { TrainingWithExercises } from "@/schemas/database";
 import { Button } from "../ui/button";
-import { Play, Trash2 } from "lucide-react";
+import { Play, Trash2, Copy } from "lucide-react";
 
 interface TrainingActionsProps {
   training: TrainingWithExercises;
   onStartWorkout: (training: TrainingWithExercises) => void;
   onSetAsDone: (training?: TrainingWithExercises) => void;
   onEditWorkout: (training: TrainingWithExercises) => void;
-  // onCopyTraining: (training: TrainingWithExercises) => void;
+  onCopyTraining: (training: TrainingWithExercises) => void;
+  canCopyTraining: boolean;
   onDeleteTraining: (trainingId: string) => void;
 }
 export const TrainingActions = ({
@@ -15,7 +16,8 @@ export const TrainingActions = ({
   onStartWorkout,
   onSetAsDone,
   onEditWorkout,
-  // onCopyTraining,
+  onCopyTraining,
+  canCopyTraining,
   onDeleteTraining,
 }: TrainingActionsProps) => {
   return (
@@ -42,14 +44,16 @@ export const TrainingActions = ({
           </Button>
 
           <div className="flex gap-2 justify-end w-full">
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onCopyTraining(training)}
-              title="Copy training summary to clipboard"
-            >
-              <Copy className="h-4 w-4" />
-            </Button> */}
+            {canCopyTraining && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onCopyTraining(training)}
+                title="Copy training summary to clipboard"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -83,14 +87,16 @@ export const TrainingActions = ({
           </Button>
 
           <div className="flex gap-2 justify-end w-full">
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onCopyTraining(training)}
-              title="Copy training summary to clipboard"
-            >
-              <Copy className="h-4 w-4" />
-            </Button> */}
+            {canCopyTraining && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onCopyTraining(training)}
+                title="Copy training summary to clipboard"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -113,6 +119,16 @@ export const TrainingActions = ({
           </Button>
 
           <div className="flex gap-2 justify-end">
+            {canCopyTraining && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onCopyTraining(training)}
+                title="Copy training summary to clipboard"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

@@ -10,6 +10,8 @@ import EmptyState from "@/components/trainings/empty-state";
 import TrainingsHeader from "@/components/trainings/trainings-header";
 import { useTrainingOperations } from "@/hooks/use-training-operations";
 import { getUserTrainings } from "@/lib/database-operations";
+import { isAdmin } from "@/lib/admin";
+import { copyTrainingToClipboard } from "@/lib/training-utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -34,6 +36,7 @@ export default function TrainingsPage() {
   const [editChoiceOpen, setEditChoiceOpen] = useState(false);
   const [selectedDoneTraining, setSelectedDoneTraining] =
     useState<TrainingWithExercises | null>(null);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const { toast } = useToast();
   const {
     copyUserIdToClipboard,
@@ -87,6 +90,20 @@ export default function TrainingsPage() {
   useEffect(() => {
     fetchTrainings(true);
   }, [fetchTrainings]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setIsAdminUser(false);
+        return;
+      }
+
+      const adminStatus = await isAdmin(user.id);
+      setIsAdminUser(adminStatus);
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   // const handleCreateSuccess = () => {
   //   setIsCreateFormOpen(false);
@@ -189,6 +206,17 @@ export default function TrainingsPage() {
     return success;
   };
 
+  const handleCopyTraining = async (training: TrainingWithExercises) => {
+    const result = await copyTrainingToClipboard(training);
+
+    if (result.success) {
+      toast({ message: result.message, type: "success" });
+      return;
+    }
+
+    toast({ message: result.message, type: "error" });
+  };
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -247,7 +275,8 @@ export default function TrainingsPage() {
                         onStartWorkout={startWorkout}
                         onSetAsDone={handleSetAsDone}
                         onEditWorkout={handleEditWorkout}
-                        // onCopyTraining={copyTrainingToClipboard}
+                        onCopyTraining={handleCopyTraining}
+                        canCopyTraining={isAdminUser}
                         onDeleteTraining={handleDeleteTraining}
                         onToggleStatus={handleToggleStatus}
                         onToggleRoundDone={handleToggleRoundDone}

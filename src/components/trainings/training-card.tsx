@@ -13,7 +13,8 @@ interface TrainingCardProps {
   onStartWorkout: (training: TrainingWithExercises) => void;
   onSetAsDone: (training?: TrainingWithExercises) => void;
   onEditWorkout: (training: TrainingWithExercises) => void;
-  // onCopyTraining: (training: TrainingWithExercises) => void;
+  onCopyTraining: (training: TrainingWithExercises) => void;
+  canCopyTraining: boolean;
   onDeleteTraining: (trainingId: string) => void;
   onToggleStatus: (
     trainingId: string,
@@ -27,7 +28,8 @@ export default function TrainingCard({
   onStartWorkout,
   onSetAsDone,
   onEditWorkout,
-  // onCopyTraining,
+  onCopyTraining,
+  canCopyTraining,
   onDeleteTraining,
   onToggleStatus,
   onToggleRoundDone,
@@ -102,7 +104,8 @@ export default function TrainingCard({
             onStartWorkout={onStartWorkout}
             onSetAsDone={onSetAsDone}
             onEditWorkout={onEditWorkout}
-            // onCopyTraining={onCopyTraining}
+            onCopyTraining={onCopyTraining}
+            canCopyTraining={canCopyTraining}
             onDeleteTraining={onDeleteTraining}
           />
         </div>
