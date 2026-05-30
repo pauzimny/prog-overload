@@ -24,6 +24,7 @@ import {
   updateRound,
   updateExercise,
   createRound,
+  createExercise,
 } from "@/lib/database-operations";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "./ui/textarea";
@@ -68,6 +69,8 @@ export default function WorkoutTimer({
   });
   const [isCompleting, setIsCompleting] = useState(false);
   const [switchingExerciseIndex, setSwitchingExerciseIndex] = useState<number | null>(null);
+  const [newExerciseName, setNewExerciseName] = useState("");
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [pendingSaveRounds, setPendingSaveRounds] = useState<Set<string>>(new Set());
   const [pendingToggleRounds, setPendingToggleRounds] = useState<Set<string>>(new Set());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -188,7 +191,13 @@ export default function WorkoutTimer({
       onComplete();
     } catch (error) {
       console.error("Failed to complete workout:", error);
-      toast({ message: "Failed to complete workout", type: "error" });
+
+      const errorMessage =
+        error instanceof Error && error.message
+          ? `Failed to complete workout: ${error.message}`
+          : "Failed to complete workout";
+
+      toast({ message: errorMessage, type: "error" });
     } finally {
       setIsCompleting(false);
     }
@@ -221,6 +230,62 @@ export default function WorkoutTimer({
       // updated_at: new Date().toISOString(), // Add updated_at field
     });
     setEditedTraining(newTraining);
+  };
+
+  const addExercise = async () => {
+    if (isCompleting || isAddingExercise) return;
+
+    const trimmedName = newExerciseName.trim();
+    if (!trimmedName) {
+      toast({ message: "Exercise name is required", type: "error" });
+      return;
+    }
+
+    if (!editedTraining.id) {
+      toast({ message: "Cannot add exercise to this workout", type: "error" });
+      return;
+    }
+
+    setIsAddingExercise(true);
+
+    try {
+      const createdExercise = await createExercise({
+        training_id: editedTraining.id,
+        name: trimmedName,
+        active: false,
+      });
+
+      setEditedTraining((prev) => {
+        const next = { ...prev };
+        next.exercises = [
+          ...prev.exercises,
+          {
+            ...createdExercise,
+            rounds: [
+              {
+                id: `temp-${Date.now()}`,
+                exercise_id: createdExercise.id,
+                weight: 0,
+                reps: 0,
+                comments: "",
+                done: false,
+                created_at: new Date().toISOString(),
+              },
+            ],
+          },
+        ];
+        return next;
+      });
+
+      setCurrentExerciseIndex(editedTraining.exercises.length);
+      setNewExerciseName("");
+      toast({ message: "Exercise added", type: "success" });
+    } catch (error) {
+      console.error("Failed to add exercise:", error);
+      toast({ message: "Failed to add exercise", type: "error" });
+    } finally {
+      setIsAddingExercise(false);
+    }
   };
 
   const persistRound = async (exerciseIndex: number, roundIndex: number) => {
@@ -388,7 +453,7 @@ export default function WorkoutTimer({
               onClick={handleStartPause}
               variant={isRunning ? "secondary" : "default"}
               size="sm"
-              disabled={isCompleting}
+              disabled={isCompleting || isAddingExercise}
             >
               {isRunning ? (
                 <Pause className="h-4 w-4 mr-2" />
@@ -401,7 +466,7 @@ export default function WorkoutTimer({
               onClick={handleComplete}
               variant="default"
               size="sm"
-              disabled={isCompleting}
+              disabled={isCompleting || isAddingExercise}
             >
               {isCompleting ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -430,7 +495,11 @@ export default function WorkoutTimer({
                   variant={index === currentExerciseIndex ? "default" : "outline"}
                   className="w-full justify-start"
                   onClick={() => handleExerciseChange(index)}
-                  disabled={isCompleting || switchingExerciseIndex !== null}
+                  disabled={
+                    isCompleting ||
+                    isAddingExercise ||
+                    switchingExerciseIndex !== null
+                  }
                 >
                   {isSwitchingThisExercise ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -446,6 +515,35 @@ export default function WorkoutTimer({
                 </Button>
               );
             })}
+
+            <div className="flex items-center gap-2 pt-2">
+              <Input
+                value={newExerciseName}
+                onChange={(e) => setNewExerciseName(e.target.value)}
+                placeholder="New exercise name"
+                disabled={isCompleting || isAddingExercise}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addExercise();
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                onClick={addExercise}
+                disabled={
+                  isCompleting || isAddingExercise || !newExerciseName.trim()
+                }
+              >
+                {isAddingExercise ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                {isAddingExercise ? "Adding..." : "Add Exercise"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
